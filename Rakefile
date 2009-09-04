@@ -3,6 +3,7 @@ require 'rake/clean'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'fileutils'
+require 'spec/rake/spectask'
 include FileUtils
 
 # Default Rake task is to run all tests
@@ -17,7 +18,9 @@ Rake::RDocTask.new(:rdoc) do |task|
   task.rdoc_files.include(['README', 'LICENSE'])
 end
 
-task :test => :spec
-task :spec do
-	sh 'spec test/test_*.rb'
+Spec::Rake::SpecTask.new do |t|
+  t.libs << 'lib'
+  t.spec_files = FileList['test/**/*_test.rb']
 end
+
+task :test => :spec

@@ -1,2 +1,2 @@
-require File.dirname(__FILE__) + '/cookiejar/cookie.rb'
-require File.dirname(__FILE__) + '/cookiejar/jar.rb'
+require 'cookiejar/cookie'
+require 'cookiejar/jar'
