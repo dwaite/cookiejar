@@ -79,7 +79,7 @@ class Cookie
       when 'HTTPONLY'
         args[:http_only] = true
       else
-        args[:name] = key
+        args[:name] = result[1]
         args[:value] = keyvalue
       end
     end

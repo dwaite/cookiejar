@@ -14,5 +14,10 @@ describe Cookie do
         cookie = Cookie.from_set_cookie 'http://localhost', header
       end
     end
+    it "should give back the input names and values" do
+      cookie = Cookie.from_set_cookie 'http://localhost/', 'foo=bar'
+      cookie.name.should == 'foo'
+      cookie.value.should == 'bar'
+    end
   end
 end

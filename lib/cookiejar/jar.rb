@@ -26,12 +26,12 @@ require 'cookiejar/cookie_logic'
 # auth.bar.com, but not entries for com or www.auth.bar.com.
 #
 # Host Level:
-# Entries are in an hash, with keys of the path and values of either a single
-# or array of cookies.
+# Entries are in an hash, with keys of the path and values of a hash of
+# cookie names to cookie object
 #
 # {
-#   "/" : [<Cookie>, <Cookie>],
-#   "/protected" : <Cookie>
+#   "/" : {"session" : <Cookie>, "cart_id" : <Cookie>}
+#   "/protected" : {"authentication" : <Cookie>}
 # }
 #
 # Paths are given a straight prefix string comparison to match.
@@ -43,12 +43,15 @@ require 'cookiejar/cookie_logic'
 class Jar
   
   include CookieLogic
+  def initialize
+    @domains = {}
+  end
   
   def set_cookie request_uri, cookie_header_value
     uri = request_uri.is_a?(URI) ? request_uri : URI.parse(request_uri)
     host = effective_host uri
-    cookie = Cookie.parse(cookie_header_value)
-    if (cookie_valid? uri, cookie)
+    cookie = Cookie.from_set_cookie(uri, cookie_header_value)
+    if (validate_cookie uri, cookie)
       domain_paths = find_domain_for_cookie(cookie)
       add_cookie_to_path(domain_paths,cookie)
       cookie
@@ -59,34 +62,12 @@ class Jar
 
 protected  
   def find_domain_for_cookie(cookie)
-    domain = normalize_cookie_domain(cookie)
+    domain = effective_host cookie.domain
     @domains[domain] ||= {}
   end
-  
+    
   def add_cookie_to_path (paths, cookie)
-    path_entry = paths[cookie.path]
-    if (!path_entry)
-      paths[cookie.path] = cookie
-    elsif (path_entry.is_a? Cookie)
-      if path_entry.name = cookie.name
-        paths[cookie.path] = cookie
-      else
-        paths[cookie.path] = [path_entry, cookie]
-      end
-    else
-      found = false
-      paths_entry.each do |original_cookie|
-        if cookie.name == original_cookie.name
-          found = true
-          cookie
-        else
-          original_cookie
-        end
-      end
-      if !found
-        paths_entry << cookie
-      end
-    end
+    path_entry = (paths[cookie.path] ||= {})
+    path_entry[cookie.name] = cookie
   end
-
 end
