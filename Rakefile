@@ -4,6 +4,8 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'fileutils'
 require 'spec/rake/spectask'
+require 'rubygems'
+require 'yaml'
 include FileUtils
 
 # Default Rake task is to run all tests
@@ -24,3 +26,29 @@ Spec::Rake::SpecTask.new do |t|
 end
 
 task :test => :spec
+
+spec = Gem::Specification.new do |s|
+  s.name = 'cookiejar'
+  s.version = '0.1.0'
+  s.summary = "Client-side HTTP Cookie library"
+  s.description = %{Allows for parsing and returning cookies in Ruby HTTP client code}
+  s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb']
+  s.require_path = 'lib'
+  s.has_rdoc = true
+#  s.extra_rdoc_files = Dir['[A-Z]*']
+  s.rdoc_options << '--title' <<  'CookieJar -- Client-side HTTP Cookies'
+  s.author = "David Waite"
+  s.email = "david@alkaline-solutions.com"
+  s.homepage = "http://alkaline-solutions.com"
+end
+
+Rake::GemPackageTask.new(spec) do |pkg|
+   pkg.need_zip = true
+   pkg.need_tar = true
+end
+
+task :gemspec do
+  File.open("#{spec.name}.gemspec", 'w') do |f|
+    f.write spec.to_ruby
+  end
+end

@@ -1,4 +1,5 @@
 require 'cookiejar'
+include CookieJar
 
 NETSCAPE_SPEC_SET_COOKIE_HEADERS =
 ['CUSTOMER=WILE_E_COYOTE; path=/; expires=Wednesday, 09-Nov-99 23:12:40 GMT',

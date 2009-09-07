@@ -1,5 +1,7 @@
 require 'cookiejar'
 require 'cookiejar/cookie_logic'
+include CookieJar
+
 describe CookieLogic do
   include CookieLogic
   
@@ -40,9 +42,9 @@ describe CookieLogic do
     it "should return nil for a root domain" do
       hostname_reach('github.com').should be_nil
     end
-    it "should return nil for a local domain" do
+    it "should return 'local' for a local domain" do
       ['foo.local', 'foo.local.'].each do |hostname|
-        hostname_reach(hostname).should be_nil
+        hostname_reach(hostname).should == 'local'
       end
     end
     it "should return nil for an IPv4 address" do
@@ -197,11 +199,11 @@ describe CookieLogic do
       validate_cookie('http://127.0.0.1/', ipaddr).should be_true
     end
     it "should handle an explicit domain on an internet site" do
-      explicit = Cookie.new 'http://foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => 'foo.com'
+      explicit = Cookie.new 'http://foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => '.foo.com'
       validate_cookie('http://foo.com/', explicit).should be_true
     end
     it "should handle setting a cookie explicitly on a superdomain" do
-      superdomain = Cookie.new 'http://auth.foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => 'foo.com'
+      superdomain = Cookie.new 'http://auth.foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => '.foo.com'
       validate_cookie('http://foo.com/', superdomain).should be_true
     end
     it "should handle explicitly setting a cookie" do
@@ -211,6 +213,24 @@ describe CookieLogic do
     it "should handle setting a cookie on a higher path" do
       higher = Cookie.new 'http://foo.com/bar/baz/', :name => 'foo', :value => 'bar', :version => 0, :path => '/bar/'
       validate_cookie('http://foo.com/bar/baz/', higher)
+    end
+  end
+  describe '.compute_search_domains' do
+    it "should handle subdomains" do
+      compute_search_domains('http://www.auth.foo.com/').should ==
+       ['www.auth.foo.com', '.www.auth.foo.com', '.auth.foo.com']
+    end
+    it "should handle root domains" do
+      compute_search_domains('http://foo.com/').should ==
+      ['foo.com', '.foo.com']
+    end
+    it "should handle IP addresses" do
+      compute_search_domains('http://127.0.0.1/').should ==
+      ['127.0.0.1']
+    end
+    it "should handle local addresses" do
+      compute_search_domains('http://zero/').should == 
+      ['zero.local', '.zero.local', '.local']
     end
   end
 end

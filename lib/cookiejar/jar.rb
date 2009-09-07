@@ -40,34 +40,86 @@ require 'cookiejar/cookie_logic'
 #
 # Cookies returned are ordered solely by specificity (length) of the
 # path. 
-class Jar
-  
-  include CookieLogic
-  def initialize
-    @domains = {}
-  end
-  
-  def set_cookie request_uri, cookie_header_value
-    uri = request_uri.is_a?(URI) ? request_uri : URI.parse(request_uri)
-    host = effective_host uri
-    cookie = Cookie.from_set_cookie(uri, cookie_header_value)
-    if (validate_cookie uri, cookie)
-      domain_paths = find_domain_for_cookie(cookie)
-      add_cookie_to_path(domain_paths,cookie)
-      cookie
-    else
-      nil
+module CookieJar
+  class Jar
+    include CookieLogic
+    def initialize
+  	  @domains = {}
     end
-  end
-
-protected  
-  def find_domain_for_cookie(cookie)
-    domain = effective_host cookie.domain
-    @domains[domain] ||= {}
-  end
     
-  def add_cookie_to_path (paths, cookie)
-    path_entry = (paths[cookie.path] ||= {})
-    path_entry[cookie.name] = cookie
+    # Given a request URI and a literal Set-Cookie header value, attempt to
+    # add the cookie to the cookie store.
+    # 
+    # returns the Cookie object on success, otherwise raises an 
+    # InvalidCookieError
+    def set_cookie request_uri, cookie_header_value
+    	uri = request_uri.is_a?(URI) ? request_uri : URI.parse(request_uri)
+    	host = effective_host uri
+    	cookie = Cookie.from_set_cookie(uri, cookie_header_value)
+    	if (validate_cookie uri, cookie)
+    	  domain_paths = find_or_add_domain_for_cookie(cookie.domain)
+    	  add_cookie_to_path(domain_paths,cookie)
+    	  cookie
+    	end
+    end
+    
+    # Given a request URI, return a sorted list of Cookie objects. Cookies
+    # will be in order per RFC 2965 - sorted by longest path length, but
+    # otherwise unordered.
+    #
+    # optional arguments are 
+    # - :script - if set, cookies set to be HTTP-only will be ignored
+    def get_cookies request_uri, args = {}
+  	  uri = request_uri.is_a?(URI)? request_uri : URI.parse(request_uri)
+    	hosts = compute_search_domains uri
+	
+    	results = []
+    	hosts.each do |host|
+    	  domain = find_domain_for_cookie host
+    	  domain.each do |path, cookies|
+    		  if uri.path.start_with? path
+      		  results += cookies.select do |name, cookie|
+        			send_cookie? uri, cookie, args[:script]
+        		end.collect do |name, cookie|
+        			cookie
+        		end            
+        	end
+      	end
+      end
+    	#Sort by path length, longest first
+    	results.sort do |lhs, rhs|
+    	  rhs.path.length <=> lhs.path.length
+    	end
+    end
+    
+    # Given a request URI, return a sorted array of Cookie headers, in the 
+    # format ['Cookie', '<Header Value>']. Cookies will be in order per 
+    # RFC 2965 - sorted by longest path length, but otherwise unordered.
+    #
+    # optional arguments are 
+    # - :script - if set, cookies set to be HTTP-only will be ignored    
+    def get_cookie_headers request_uri, args = {}
+    	cookies = get_cookies request_uri, args
+    	cookies.map do |cookie|
+    	  ['Cookie', "#{cookie.name}=#{cookie.value}"]
+    	end
+    end
+
+  protected  
+
+    def find_domain_for_cookie domain
+    	domain = effective_host domain
+    	@domains[domain] || {}
+    end
+
+    def find_or_add_domain_for_cookie(domain)
+    	domain = effective_host domain
+    	@domains[domain] ||= {}
+    end
+	
+    def add_cookie_to_path (paths, cookie)
+    	path_entry = (paths[cookie.path] ||= {})
+    	path_entry[cookie.name] = cookie
+    end
   end
 end
