@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-
 Gem::Specification.new do |s|
   s.name = %q{cookiejar}
   s.version = "0.1.0"
