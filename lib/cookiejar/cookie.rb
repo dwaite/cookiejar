@@ -52,7 +52,7 @@ module CookieJar
       @name      = args[:name]
       @value     = args[:value]
       @version   = args[:version]
-      @created_at = DateTime.now
+      @created_at = Time.now
     end
   
     PARAM1 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE1})?\Z/
@@ -70,7 +70,7 @@ module CookieJar
         keyvalue = result[2] || result[3]
         case key
         when 'EXPIRES'
-          args[:expires_at] = DateTime.parse(keyvalue)
+          args[:expires_at] = Time.parse(keyvalue)
         when 'DOMAIN'
           args[:domain] = keyvalue.downcase
         when 'PATH'
