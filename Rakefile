@@ -1,9 +1,11 @@
+require 'rubygems'
+
 require 'rake'
 require 'rake/clean'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
+
 require 'fileutils'
-require 'rubygems'
 include FileUtils
 
 # Default Rake task is to run all tests
@@ -34,7 +36,8 @@ spec = Gem::Specification.new do |s|
   s.name = 'cookiejar'
   s.version = '0.1.0'
   s.summary = "Client-side HTTP Cookie library"
-  s.description = %{Allows for parsing and returning cookies in Ruby HTTP client code}
+  s.description = 
+    %{Allows for parsing and returning cookies in Ruby HTTP client code}
   s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb']
   s.require_path = 'lib'
   s.has_rdoc = true
