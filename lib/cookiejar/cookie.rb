@@ -12,8 +12,7 @@ module CookieJar
     include CookieLogic
     extend CookieLogic
     
-    # The name and value of the cookie. These values are mandatory for all
-    # cookies
+    # The mandatory name and value of the cookie
     attr_reader :name, :value
     # The domain and path of the cookie. These values will be set on all
     # legal cookie objects, based on the requested URI if not set literally
@@ -154,7 +153,7 @@ module CookieJar
         end
       end
 
-      raise InvalidCookieError.new (errors) unless errors.empty?
+      raise InvalidCookieError.new(errors) unless errors.empty?
 
       # Note: 'secure' is not explicitly defined as an SSL channel, and no
       # test is defined around validity and the 'secure' attribute
