@@ -56,11 +56,9 @@ module CookieJar
     	uri = request_uri.is_a?(URI) ? request_uri : URI.parse(request_uri)
     	host = effective_host uri
     	cookie = Cookie.from_set_cookie(uri, cookie_header_value)
-    	if (validate_cookie uri, cookie)
-    	  domain_paths = find_or_add_domain_for_cookie(cookie.domain)
-    	  add_cookie_to_path(domain_paths,cookie)
-    	  cookie
-    	end
+  	  domain_paths = find_or_add_domain_for_cookie(cookie.domain)
+  	  add_cookie_to_path(domain_paths,cookie)
+  	  cookie
     end
     
     # Given a request URI, return a sorted list of Cookie objects. Cookies
@@ -79,7 +77,7 @@ module CookieJar
     	  domain.each do |path, cookies|
     		  if uri.path.start_with? path
       		  results += cookies.select do |name, cookie|
-        			send_cookie? uri, cookie, args[:script]
+        			cookie.should_send? uri, args[:script]
         		end.collect do |name, cookie|
         			cookie
         		end            

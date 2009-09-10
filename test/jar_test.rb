@@ -39,6 +39,13 @@ describe Jar do
       cookies[2].name.should == 'c'
       cookies[3].name.should == 'd'
     end
+    it "should not return expired cookies" do
+      jar = Jar.new
+      uri = 'http://localhost/'
+      jar.set_cookie uri, 'foo=bar;expires=Wednesday, 09-Nov-99 23:12:40 GMT'
+      cookies = jar.get_cookies(uri)
+      cookies.should have(0).items
+    end
   end
   describe '.get_cookie_headers' do
     it "should return cookie headers" do
