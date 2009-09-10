@@ -156,8 +156,8 @@ module CookieJar
     
       # The Port attribute has a "port-list", and the request-port was
       # not in the list.
-      if cookie.port.to_a.length != 0
-        unless cookie.port.to_a.find_index uri.port
+      unless cookie.ports.nil? || cookie.ports.length != 0
+        unless cookie.ports.find_index uri.port
           raise InvalidCookieError, "incoming request port does not match cookie port(s)"
         end
       end

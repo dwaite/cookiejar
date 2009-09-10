@@ -139,79 +139,80 @@ describe CookieLogic do
   describe '.validate_cookie' do
     localaddr = 'http://localhost/foo/bar/'
     it "should fail if version unset" do
-      unversioned = Cookie.new localaddr, :name => 'foo', :value => 'bar', :version => nil
+      unversioned = Cookie.from_set_cookie localaddr, 'foo=bar'
+      unversioned.instance_variable_set :@version, nil
       lambda do
         validate_cookie localaddr, unversioned
       end.should raise_error InvalidCookieError
     end
     it "should fail if the path is more specific" do
-      subdirred = Cookie.new localaddr, :name => 'foo', :value => 'bar', :version => 0, :path => '/foo/bar/baz'
+      subdirred = Cookie.from_set_cookie localaddr, 'foo=bar;path=/foo/bar/baz'
       lambda do
         validate_cookie localaddr, subdirred
       end.should raise_error InvalidCookieError
     end
     it "should fail if the path is different than the request" do
-      difdirred = Cookie.new localaddr, :name => 'foo', :value => 'bar', :version => 0, :path => '/baz/'
+      difdirred = Cookie.from_set_cookie localaddr, 'foo=bar;path=/baz/'
       lambda do
         validate_cookie localaddr, difdirred
       end.should raise_error InvalidCookieError
     end
     it "should fail if the domain has no dots" do
-      nodot = Cookie.new 'http://zero/', :name => 'foo', :value => 'bar', :version => 0, :domain => 'zero'
+      nodot = Cookie.from_set_cookie 'http://zero/', 'foo=bar;domain=zero'
       lambda do
         validate_cookie 'http://zero/', nodot
       end.should raise_error InvalidCookieError
     end
     it "should fail for explicit localhost" do
-      localhost = Cookie.new localaddr, :name => 'foo', :value => 'bar', :version => 0, :domain => 'localhost'
+      localhost = Cookie.from_set_cookie localaddr, 'foo=bar;domain=localhost'
       lambda do
         validate_cookie localaddr, localhost
       end.should raise_error InvalidCookieError
     end
     it "should fail for mismatched domains" do
-      foobar = Cookie.new 'http://www.foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => 'bar.com'
+      foobar = Cookie.from_set_cookie 'http://www.foo.com/', 'foo=bar;domain=bar.com'
       lambda do
         validate_cookie 'http://www.foo.com/', foobar
       end.should raise_error InvalidCookieError
     end
     it "should fail for domains more than one level up" do
-      xyz = Cookie.new 'http://x.y.z.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => 'z.com'
+      xyz = Cookie.from_set_cookie 'http://x.y.z.com/', 'foo=bar;domain=z.com'
       lambda do
         validate_cookie 'http://x.y.z.com/', xyz
       end.should raise_error InvalidCookieError
     end
     it "should fail for setting subdomain cookies" do
-      subdomain = Cookie.new 'http://foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => 'auth.foo.com'
+      subdomain = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar;domain=auth.foo.com'
       lambda do
         validate_cookie 'http://foo.com/', subdomain
       end.should raise_error InvalidCookieError
     end
     it "should handle a normal implicit internet cookie" do
-      normal = Cookie.new 'http://foo.com/', :name => 'foo', :value => 'bar', :version => 0
+      normal = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar'
       validate_cookie('http://foo.com/', normal).should be_true
     end
     it "should handle a normal implicit localhost cookie" do
-      localhost = Cookie.new 'http://localhost/', :name => 'foo', :value => 'bar', :version => 0
+      localhost = Cookie.from_set_cookie 'http://localhost/', 'foo=bar'
       validate_cookie('http://localhost/', localhost).should be_true
     end
     it "should handle an implicit IP address cookie" do
-      ipaddr =  Cookie.new 'http://127.0.0.1/', :name => 'foo', :value => 'bar', :version => 0
+      ipaddr =  Cookie.from_set_cookie 'http://127.0.0.1/', 'foo=bar'
       validate_cookie('http://127.0.0.1/', ipaddr).should be_true
     end
     it "should handle an explicit domain on an internet site" do
-      explicit = Cookie.new 'http://foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => '.foo.com'
+      explicit = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar;domain=.foo.com'
       validate_cookie('http://foo.com/', explicit).should be_true
     end
     it "should handle setting a cookie explicitly on a superdomain" do
-      superdomain = Cookie.new 'http://auth.foo.com/', :name => 'foo', :value => 'bar', :version => 0, :domain => '.foo.com'
+      superdomain = Cookie.from_set_cookie 'http://auth.foo.com/', 'foo=bar;domain=.foo.com'
       validate_cookie('http://foo.com/', superdomain).should be_true
     end
     it "should handle explicitly setting a cookie" do
-      explicit = Cookie.new 'http://foo.com/bar/', :name => 'foo', :value => 'bar', :version => 0, :path => '/bar/'
+      explicit = Cookie.from_set_cookie 'http://foo.com/bar/', 'foo=bar;path=/bar/'
       validate_cookie('http://foo.com/bar/', explicit)
     end
     it "should handle setting a cookie on a higher path" do
-      higher = Cookie.new 'http://foo.com/bar/baz/', :name => 'foo', :value => 'bar', :version => 0, :path => '/bar/'
+      higher = Cookie.from_set_cookie 'http://foo.com/bar/baz/', 'foo=bar;path=/bar/'
       validate_cookie('http://foo.com/bar/baz/', higher)
     end
   end
