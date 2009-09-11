@@ -37,6 +37,11 @@ describe Cookie do
       cookie = Cookie.from_set_cookie 'http://localhost/', 'foo=bar;domain=.local'
       cookie.domain.should == '.local'
     end
+    it "should accept secure cookies" do
+      cookie = Cookie.from_set_cookie 'https://www.google.com/a/blah', 'GALX=RgmSftjnbPM;Path=/a/;Secure'
+      cookie.name.should == 'GALX'
+      cookie.secure.should be_true
+    end
   end
   describe '.validate_cookie' do
     localaddr = 'http://localhost/foo/bar/'

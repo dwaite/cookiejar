@@ -97,9 +97,9 @@ module CookieJar
           args[:domain] = keyvalue
         when :path
           args[:path] = keyvalue
-        when 'SECURE'
+        when :secure
           args[:secure] = true
-        when 'HTTPONLY'
+        when :httponly
           args[:http_only] = true
         else
           args[:name] = result[1]
