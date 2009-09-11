@@ -1,4 +1,4 @@
-require 'cookiejar/cookie_logic'
+require 'cookiejar/cookie'
 
 # A cookie store for client side usage. 
 # - Enforces cookie validity rules
@@ -42,7 +42,6 @@ require 'cookiejar/cookie_logic'
 # path. 
 module CookieJar
   class Jar
-    include CookieLogic
     def initialize
   	  @domains = {}
     end
@@ -53,10 +52,8 @@ module CookieJar
     # returns the Cookie object on success, otherwise raises an 
     # InvalidCookieError
     def set_cookie request_uri, cookie_header_value
-    	uri = request_uri.is_a?(URI) ? request_uri : URI.parse(request_uri)
-    	host = effective_host uri
-    	cookie = Cookie.from_set_cookie(uri, cookie_header_value)
-  	  domain_paths = find_or_add_domain_for_cookie(cookie.domain)
+    	cookie = Cookie.from_set_cookie request_uri, cookie_header_value
+  	  domain_paths = find_or_add_domain_for_cookie cookie
   	  add_cookie_to_path(domain_paths,cookie)
   	  cookie
     end
@@ -69,11 +66,11 @@ module CookieJar
     # - :script - if set, cookies set to be HTTP-only will be ignored
     def get_cookies request_uri, args = {}
   	  uri = request_uri.is_a?(URI)? request_uri : URI.parse(request_uri)
-    	hosts = compute_search_domains uri
+    	hosts = Cookie.compute_search_domains uri
 	
     	results = []
     	hosts.each do |host|
-    	  domain = find_domain_for_cookie host
+    	  domain = find_domain host
     	  domain.each do |path, cookies|
     		  if uri.path.start_with? path
       		  results += cookies.select do |name, cookie|
@@ -105,14 +102,12 @@ module CookieJar
 
   protected  
 
-    def find_domain_for_cookie domain
-    	domain = effective_host domain
-    	@domains[domain] || {}
+    def find_domain host
+    	@domains[host] || {}
     end
 
-    def find_or_add_domain_for_cookie(domain)
-    	domain = effective_host domain
-    	@domains[domain] ||= {}
+    def find_or_add_domain_for_cookie cookie
+    	@domains[cookie.domain] ||= {}
     end
 	
     def add_cookie_to_path (paths, cookie)
