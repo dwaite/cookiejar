@@ -34,7 +34,7 @@ task :test => :spec
 
 spec = Gem::Specification.new do |s|
   s.name = 'cookiejar'
-  s.version = '0.1.3'
+  s.version = '0.2.0'
   s.summary = "Client-side HTTP Cookie library"
   s.description = 
     %{Allows for parsing and returning cookies in Ruby HTTP client code}
@@ -53,6 +53,7 @@ Rake::GemPackageTask.new(spec) do |pkg|
    pkg.need_tar = true
 end
 
+desc "create a .gemspec file"
 task :gemspec do
   File.open("#{spec.name}.gemspec", 'w') do |f|
     f.write spec.to_ruby
