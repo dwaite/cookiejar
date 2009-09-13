@@ -1,5 +1,7 @@
 require 'cookiejar'
 require 'yaml'
+require 'rubygems'
+
 include CookieJar
 
 describe Jar do
@@ -53,9 +55,92 @@ describe Jar do
       uri = 'http://foo.com/a/b/c/d' 
       jar.set_cookie uri, 'a=bar'
       jar.set_cookie uri, 'b=baz;path=/a/b/c/d'
-      cookie_headers = jar.get_cookie_headers uri
-      cookie_headers.should have(2).items
-      cookie_headers.should == [['Cookie', 'b=baz'],['Cookie', 'a=bar']]
+      cookie_headers = jar.get_cookie_header uri
+      cookie_headers.should == "b=baz;a=bar"
+    end
+  end
+  describe '.add_cookie' do
+    it "should let me add a pre-existing cookie" do
+      jar = Jar.new
+      cookie = Cookie.from_set_cookie 'http://localhost/', 'foo=bar'
+      jar.add_cookie cookie
+    end
+  end
+  describe '.to_a' do
+    it "should return me an array of all cookie objects" do
+      uri = 'http://foo.com/a/b/c/d' 
+      jar = Jar.new
+      jar.set_cookie uri, 'a=bar;expires=Wednesday, 09-Nov-99 23:12:40 GMT'
+      jar.set_cookie uri, 'b=baz;path=/a/b/c/d'
+      jar.set_cookie uri, 'c=bar;path=/a/b'
+      jar.set_cookie uri, 'd=bar;path=/a/'
+      jar.set_cookie 'http://localhost/', 'foo=bar'
+      jar.to_a.should have(5).items
+    end
+  end
+  describe '.expire_cookies' do
+    it "should expire cookies which are no longer valid" do
+      uri = 'http://foo.com/a/b/c/d' 
+      jar = Jar.new
+      jar.set_cookie uri, 'a=bar;expires=Wednesday, 09-Nov-99 23:12:40 GMT'
+      jar.set_cookie uri, 'b=baz;path=/a/b/c/d;expires=Wednesday, 01-Nov-2028 12:00:00 GMT'
+      jar.set_cookie uri, 'c=bar;path=/a/b'
+      jar.set_cookie uri, 'd=bar;path=/a/'
+      jar.set_cookie 'http://localhost/', 'foo=bar'
+      jar.to_a.should have(5).items
+      jar.expire_cookies
+      jar.to_a.should have(4).items
+    end
+    it "should let me expire all session cookies" do
+      uri = 'http://foo.com/a/b/c/d' 
+      jar = Jar.new
+      jar.set_cookie uri, 'a=bar;expires=Wednesday, 09-Nov-99 23:12:40 GMT'
+      jar.set_cookie uri, 'b=baz;path=/a/b/c/d;expires=Wednesday, 01-Nov-2028 12:00:00 GMT'
+      jar.set_cookie uri, 'c=bar;path=/a/b'
+      jar.set_cookie uri, 'd=bar;path=/a/'
+      jar.set_cookie 'http://localhost/', 'foo=bar'
+      jar.to_a.should have(5).items
+      jar.expire_cookies true
+      jar.to_a.should have(1).items
+    end
+  end
+  begin
+    require 'json'
+    describe ".to_json" do
+      it "should serialize cookies to JSON" do
+      
+        c = Cookie.from_set_cookie 'https://localhost/', 'foo=bar;secure;expires=Wed, 01-Nov-2028 12:00:00 GMT'
+        jar = Jar.new
+        jar.add_cookie c
+        json = jar.to_json
+        json.should be_a String
+      end
+    end
+    describe ".json_create" do
+      it "should deserialize a JSON array to a jar" do
+        json = "[{\"name\":\"foo\",\"value\":\"bar\",\"domain\":\"localhost.local\",\"path\":\"\\/\",\"created_at\":\"2009-09-11 12:51:03 -0600\",\"expiry\":\"2028-11-01 12:00:00 GMT\",\"secure\":true}]" 
+        array = JSON.parse json
+        
+        jar = Jar.json_create array
+        jar.get_cookies('https://localhost/').should have(1).items
+      end
+      it "should deserialize a JSON hash to a jar" do
+        json = "{\"cookies\":[{\"name\":\"foo\",\"value\":\"bar\",\"domain\":\"localhost.local\",\"path\":\"\\/\",\"created_at\":\"2009-09-11 12:51:03 -0600\",\"expiry\":\"2028-11-01 12:00:00 GMT\",\"secure\":true}]}" 
+        hash = JSON.parse json
+        
+        jar = Jar.json_create hash
+        jar.get_cookies('https://localhost/').should have(1).items
+      end
+      
+      it "should automatically deserialize to a jar" do
+        json = "{\"json_class\":\"CookieJar::Jar\",\"cookies\":[{\"name\":\"foo\",\"value\":\"bar\",\"domain\":\"localhost.local\",\"path\":\"\\/\",\"created_at\":\"2009-09-11 12:51:03 -0600\",\"expiry\":\"2028-11-01 12:00:00 GMT\",\"secure\":true}]}" 
+        jar = JSON.parse json
+        jar.get_cookies('https://localhost/').should have(1).items  
+      end
+    end
+  rescue LoadError
+    it "does not appear the JSON library is installed" do
+       raise 'please install the JSON lirbary'
     end
   end
 end
