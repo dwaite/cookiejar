@@ -2,22 +2,20 @@ require 'rubygems'
 
 require 'rake'
 require 'rake/clean'
-require 'rake/rdoctask'
 require 'rake/gempackagetask'
-
+require 'yard'
+require 'yard/rake/yardoc_task'
 require 'fileutils'
 include FileUtils
 
 # Default Rake task is to run all tests
 task :default => :test
 
-# RDoc
-Rake::RDocTask.new(:rdoc) do |task|
-  task.rdoc_dir = 'doc'
-  task.title    = 'CookieJar'
-  task.options = %w(--title CookieJar --main README --line-numbers)
-  task.rdoc_files.include(['lib/**/*.rb'])
-  task.rdoc_files.include(['README', 'LICENSE'])
+#Yard
+YARD::Rake::YardocTask.new do |t|
+  t.files   = ['lib/**/*.rb']   # optional
+  t.options = ['--title', 'CookieJar, a HTTP Client Cookie Parsing Library',
+               '--main', 'README.markdown', '--files', 'LICENSE']
 end
 
 begin

@@ -1,14 +1,20 @@
 
 module CookieJar
-  # Represents all cookie validation errors
-  class InvalidCookieError < StandardError 
+  # Represents a set of cookie validation errors
+  class InvalidCookieError < StandardError
+    # [Array<String>] the specific validation issues encountered
     attr_reader :messages
+    
+    # Create a new instance
+    # @param [String, Array<String>] the validation issue(s) encountered
     def initialize message
      if message.is_a? Array
        @messages = message
        message = message.join ', '
+     else
+       @messages = [message]
      end
-     super(message)
+     super message
     end
   end
   
@@ -37,16 +43,21 @@ module CookieJar
     TOKEN = /\A#{PATTERN::TOKEN}\Z/
     PARAM1 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE1})?\Z/
     # PARAM2 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE2})?\Z/
-    
     # TWO_DOT_DOMAINS = /\A\.(com|edu|net|mil|gov|int|org)\Z/
     
     # Converts the input object to a URI (if not already a URI)
+    #
+    # @param [String, URI] request_uri URI we are normalizing
+    # @param [URI] URI representation of input string, or original URI
     def self.to_uri request_uri
       (request_uri.is_a? URI)? request_uri : (URI.parse request_uri)
     end
     
     # Converts an input cookie or uri to a string representing the path.
     # Assume strings are already paths
+    #
+    # @param [String, URI, Cookie] object containing the path
+    # @return [String] path information
     def self.to_path uri_or_path
       if (uri_or_path.is_a? URI) || (uri_or_path.is_a? Cookie)
         uri_or_path.path
@@ -56,7 +67,10 @@ module CookieJar
     end
     
     # Converts an input cookie or uri to a string representing the domain.
-    # Assume strings are already domains
+    # Assume strings are already domains. Value may not be an effective host.
+    # 
+    # @param [String, URI, Cookie] object containing the domain
+    # @return [String] domain information.
     def self.to_domain uri_or_domain
       if uri_or_domain.is_a? URI
         uri_or_domain.host
@@ -70,7 +84,9 @@ module CookieJar
     # Compare a tested domain against the base domain to see if they match, or
     # if the base domain is reachable.
     #
-    # returns the effective_host on success, nil on failure
+    # @param [String] tested_domain domain to be tested against
+    # @param [String] base_domain new domain being tested
+    # @return [String,nil] matching domain on success, nil on failure
     def self.domains_match tested_domain, base_domain
       base = effective_host base_domain
       search_domains = compute_search_domains_for_host base
@@ -80,7 +96,10 @@ module CookieJar
     end
     
     # Compute the reach of a hostname (RFC 2965, section 1)
-    # Determines the next highest superdomain, or nil if none valid
+    # Determines the next highest superdomain
+    #
+    # @param [String,URI,Cookie] hostname hostname, or object holding hostname
+    # @return [String,nil] next highest hostname, or nil if none
     def self.hostname_reach hostname
       host = to_domain hostname
       host = host.downcase
@@ -90,7 +109,10 @@ module CookieJar
       end
     end
         
-    # Compute the base of a path.   
+    # Compute the base of a path, for default cookie path assignment
+    #
+    # @param [String, URI, Cookie] path, or object holding path
+    # @return base path (all characters up to final '/')
     def self.cookie_base_path path
       BASE_PATH.match(to_path path)[1]
     end
@@ -102,6 +124,9 @@ module CookieJar
     #
     # Note that this will not attempt to detect a mismatch of the request uri domain
     # and explicitly specified cookie path
+    #
+    # @param [String,URI] request URI yielding this cookie
+    # @param [String] path on cookie
     def self.determine_cookie_path request_uri, cookie_path
       uri = to_uri request_uri
       cookie_path = to_path cookie_path
@@ -115,6 +140,10 @@ module CookieJar
     # Given a URI, compute the relevant search domains for pre-existing
     # cookies. This includes all the valid dotted forms for a named or IP
     # domains.
+    # 
+    # @param [String, URI] request_uri requested uri
+    # @return [Array<String>] all cookie domain values which would match the
+    #   requested uri
     def self.compute_search_domains request_uri
       uri = to_uri request_uri
       host = uri.host
@@ -123,6 +152,10 @@ module CookieJar
     
     # Given a host, compute the relevant search domains for pre-existing
     # cookies
+    #
+    # @param [String] host host being requested
+    # @return [Array<String>] all cookie domain values which would match the
+    #   requested uri
     def self.compute_search_domains_for_host host
       host = effective_host host
       result = [host]
@@ -148,6 +181,10 @@ module CookieJar
     #
     # Note that this will not attempt to detect a mismatch of the request uri domain
     # and explicitly specified cookie domain
+    #
+    # @param [String, URI] request_uri originally requested URI
+    # @param [String] cookie domain value
+    # @return [String] effective host
     def self.determine_cookie_domain request_uri, cookie_domain
       uri = to_uri request_uri
       domain = to_domain cookie_domain
@@ -165,10 +202,12 @@ module CookieJar
     end
     
     # Compute the effective host (RFC 2965, section 1)
-    # [host] a string or URI.
     #
     # Has the added additional logic of searching for interior dots specifically, and
     # matches colons to prevent .local being suffixed on IPv6 addresses
+    #
+    # @param [String, URI] host_or_uridomain name, or absolute URI
+    # @return [String] effective host per RFC rules
     def self.effective_host host_or_uri
       hostname = to_domain host_or_uri
       hostname = hostname.downcase
@@ -179,11 +218,14 @@ module CookieJar
         hostname + '.local'
       end
     end
+    
     # Check whether a cookie meets all of the rules to be created, based on 
     # its internal settings and the URI it came from.
     #
-    # returns true on success, but will raise an InvalidCookieError on failure
-    # with an appropriate error message
+    # @param [String,URI] request_uri originally requested URI
+    # @param [Cookie] cookie object
+    # @param [true] will always return true on success
+    # @raise [InvalidCookieError] on failures, containing all validation errors
     def self.validate_cookie request_uri, cookie
       uri = to_uri request_uri
       request_host = effective_host uri.host
@@ -232,12 +274,20 @@ module CookieJar
         end
       end
 
-      raise InvalidCookieError.new errors unless errors.empty?
+      raise (InvalidCookieError.new errors) unless errors.empty?
 
       # Note: 'secure' is not explicitly defined as an SSL channel, and no
       # test is defined around validity and the 'secure' attribute
       true
     end
+    
+    # Break apart a traditional (non RFC 2965) cookie value into its core
+    # components. This does not do any validation, or defaulting of values
+    # based on requested URI
+    # 
+    # @param [String] set_cookie_value a Set-Cookie header formatted cookie
+    #   definition
+    # @return [Hash] Contains the parsed values of the cookie
     def self.parse_set_cookie set_cookie_value
       args = { }
       params=set_cookie_value.split /;\s*/

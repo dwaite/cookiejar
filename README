@@ -1,2 +1,0 @@
-A library to help manage client-side cookies in Ruby. This is meant to augment
-code dealing with HTTP client connections.
