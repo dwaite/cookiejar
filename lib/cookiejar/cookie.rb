@@ -13,7 +13,7 @@ module CookieJar
   
     # [String] The name of the cookie.
     attr_reader :name
-    # [String] The value of the cookie.
+    # [String] The value of the cookie, without any attempts at decoding.
     attr_reader :value
     
     # [String] The domain scope of the cookie. Follows the RFC 2965 
@@ -68,15 +68,15 @@ module CookieJar
     #
     # @param [Time] time to compare against, or 'now' if omitted
     # @return [Boolean]
-    def is_expired? (time = Time.now)
+    def expired? (time = Time.now)
       expires_at != nil && time > expires_at
     end
 
     # Indicates whether the cookie will be considered invalid after the end
     # of the current user session
     # @return [Boolean] 
-    def is_session?
-      @expiry == nil
+    def session?
+      @expiry == nil || @discard
     end
     
     # Create a cookie based on an absolute URI and the string value of a
@@ -97,11 +97,47 @@ module CookieJar
       cookie
     end
 
-    # Overload which simply returns a name=value string for debug purposes
-    # This is NOT sufficient for sending a cookie back to the server
-    # @return [String] containing the name and value of the cookie
-    def to_s
-      "#{name}=#{value}"
+    # Create a cookie based on an absolute URI and the string value of a
+    # 'Set-Cookie2' header.
+    #
+    # @param request_uri [String, URI] HTTP/HTTPS absolute URI of request.
+    # This is used to fill in domain and port if missing from the cookie,
+    # and to perform appropriate validation.
+    # @param set_cookie_value [String] HTTP value for the Set-Cookie2 header.
+    # @return [Cookie] created from the header string and request URI
+    # @raise [InvalidCookieError] on validation failure(s)
+    def self.from_set_cookie2 request_uri, set_cookie_value 
+      args = CookieJar::CookieValidation.parse_set_cookie2 set_cookie_value
+      args[:domain] = CookieJar::CookieValidation.determine_cookie_domain request_uri, args[:domain]
+      args[:path] = CookieJar::CookieValidation.determine_cookie_path request_uri, args[:path]
+      cookie = Cookie.new args
+      CookieJar::CookieValidation.validate_cookie request_uri, cookie
+      cookie
+    end
+    
+    # Returns cookie in a format appropriate to send to a server.
+    #
+    # @param [FixNum] 0 version, 0 for Netscape-style cookies, 1 for 
+    #   RFC2965-style.
+    # @param [Boolean] true prefix, for RFC2965, whether to prefix with
+    # "$Version=<version>;". Ignored for Netscape-style cookies
+    def to_s ver=0, prefix=true
+      case ver
+      when 0
+        "#{name}=#{value}"
+      when 1
+        # we do not need to encode path; the only characters required to be
+        # quoted must be escaped in URI
+        str = prefix ? "$Version=#{version};" : ""
+        str << "#{name}=#{value};$Path=\"#{path}\""
+        if domain.start_with? '.'
+          str << ";$Domain=#{domain}"
+        end
+        if ports
+          str << ";$Port=\"#{ports.join ','}\""
+        end
+        str
+      end
     end
 
     # Determine if a cookie should be sent given a request URI along with
@@ -122,8 +158,13 @@ module CookieJar
       path_match   = uri.path.start_with? @path
       secure_match = !(@secure && uri.scheme == 'http') 
       script_match = !(script && @http_only)
-      expiry_match = !is_expired?
-      path_match && secure_match && script_match && expiry_match
+      expiry_match = !expired?
+      ports_match = ports.nil? || (ports.include? uri.port)
+      path_match && secure_match && script_match && expiry_match && ports_match
+    end
+    
+    def decoded_value
+      CookieJar::CookieValidation::decode_value value
     end
     
     # Return a JSON 'object' for the various data values. Allows for

@@ -10,7 +10,7 @@ include FileUtils
 
 # Default Rake task is to run all tests
 task :default => :test
-
+CLEAN << Rake::FileList['doc/**', '.yardoc']
 #Yard
 YARD::Rake::YardocTask.new do |t|
   t.files   = ['lib/**/*.rb']   # optional
@@ -32,7 +32,7 @@ task :test => :spec
 
 spec = Gem::Specification.new do |s|
   s.name = 'cookiejar'
-  s.version = '0.2.0'
+  s.version = '0.2.9'
   s.summary = "Client-side HTTP Cookie library"
   s.description = 
     %{Allows for parsing and returning cookies in Ruby HTTP client code}

@@ -1,4 +1,5 @@
-
+require 'cgi'
+require 'uri'
 module CookieJar
   # Represents a set of cookie validation errors
   class InvalidCookieError < StandardError
@@ -23,17 +24,17 @@ module CookieJar
     module PATTERN
       include URI::REGEXP::PATTERN
 
-      TOKEN = '[^(),\/<>@;:\\\"\[\]?={}\s]*'
+      TOKEN = '[^(),\/<>@;:\\\"\[\]?={}\s]+'
       VALUE1 = "([^;]*)"
       IPADDR = "#{IPV4ADDR}|#{IPV6ADDR}"
       BASE_HOSTNAME = "(?:#{DOMLABEL}\\.)(?:((?:(?:#{DOMLABEL}\\.)+(?:#{TOPLABEL}\\.?))|local))"
 
-      # QUOTED_PAIR = "\\\\[\\x00-\\x7F]"
-      # LWS = "\\r\\n(?:[ \\t]+)"
+      QUOTED_PAIR = "\\\\[\\x00-\\x7F]"
+      LWS = "\\r\\n(?:[ \\t]+)"
       # TEXT="[\\t\\x20-\\x7E\\x80-\\xFF]|(?:#{LWS})"
-      # QDTEXT="[\\t\\x20-\\x21\\x23-\\x7E\\x80-\\xFF]|(?:#{LWS})"
-      # QUOTED_TEXT = "\\\"((?:#{QDTEXT}|#{QUOTED_PAIR})*)\\\""
-      # VALUE2 = "(#{TOKEN})|#{QUOTED_TEXT}"
+      QDTEXT="[\\t\\x20-\\x21\\x23-\\x7E\\x80-\\xFF]|(?:#{LWS})"
+      QUOTED_TEXT = "\\\"(?:#{QDTEXT}|#{QUOTED_PAIR})*\\\""
+      VALUE2 = "#{TOKEN}|#{QUOTED_TEXT}"
 
     end
     BASE_HOSTNAME = /#{PATTERN::BASE_HOSTNAME}/
@@ -42,7 +43,7 @@ module CookieJar
     HDN = /\A#{PATTERN::HOSTNAME}\Z/
     TOKEN = /\A#{PATTERN::TOKEN}\Z/
     PARAM1 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE1})?\Z/
-    # PARAM2 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE2})?\Z/
+    PARAM2 = Regexp.new "(#{PATTERN::TOKEN})(?:=(#{PATTERN::VALUE2}))?(?:\\Z|;)", '', 'n'
     # TWO_DOT_DOMAINS = /\A\.(com|edu|net|mil|gov|int|org)\Z/
     
     # Converts the input object to a URI (if not already a URI)
@@ -291,6 +292,8 @@ module CookieJar
     def self.parse_set_cookie set_cookie_value
       args = { }
       params=set_cookie_value.split /;\s*/
+      
+      first=true
       params.each do |param|
         result = PARAM1.match param
         if !result
@@ -298,24 +301,100 @@ module CookieJar
         end
         key = result[1].downcase.to_sym
         keyvalue = result[2]
-        case key
-        when :expires
-          args[:expires_at] = Time.parse keyvalue
-        when :domain
-          args[:domain] = keyvalue
-        when :path
-          args[:path] = keyvalue
-        when :secure
-          args[:secure] = true
-        when :httponly
-          args[:http_only] = true
-        else
+        if first
           args[:name] = result[1]
           args[:value] = keyvalue
+          first = false
+        else
+          case key
+          when :expires
+            args[:expires_at] = Time.parse keyvalue
+          when *[:domain, :path]
+            args[key] = keyvalue
+          when :secure
+            args[:secure] = true
+          when :httponly
+            args[:http_only] = true
+          else
+            raise InvalidCookieError.new "Unknown cookie parameter '#{key}'"
+          end
         end
       end
       args[:version] = 0
       args
     end
+    
+    # Parse a RFC 2965 value and convert to a literal string
+    def self.value_to_string value
+      if /\A"(.*)"\Z/.match value
+        value = $1
+        value = value.gsub(/\\(.)/, '\1')
+      else
+        value
+      end
+    end
+    
+    # Attempt to decipher a partially decoded version of text cookie values
+    def self.decode_value value
+      if /\A"(.*)"\Z/.match value
+        value_to_string value
+      else
+        CGI.unescape value
+      end
+    end
+      
+    # Break apart a RFC 2965 cookie value into its core components. 
+    # This does not do any validation, or defaulting of values
+    # based on requested URI
+    # 
+    # @param [String] set_cookie_value a Set-Cookie2 header formatted cookie
+    #   definition
+    # @return [Hash] Contains the parsed values of the cookie
+    def self.parse_set_cookie2 set_cookie_value
+      args = { }
+      first = true
+      index = 0
+      begin
+        md = PARAM2.match set_cookie_value, index
+        if md.nil? || md.offset(0).first != index
+          raise InvalidCookieError.new "Invalid Set-Cookie2 header '#{set_cookie_value}'"
+        end
+        index=md.offset(0)[1]
+        
+        key = md[1].downcase.to_sym
+        keyvalue = md[2] || md[3]
+        if first
+          args[:name] = md[1]
+          args[:value] = keyvalue
+          first = false
+        else
+          keyvalue = value_to_string keyvalue
+          case key
+          when *[:comment,:commenturl,:domain,:path]
+            args[key] = keyvalue
+          when *[:discard,:secure]
+            args[key] = true
+          when :httponly
+            args[:http_only] = true
+          when :"max-age"
+            args[:max_age] = keyvalue.to_i
+          when :version
+            args[:version] = keyvalue.to_i
+          when :port
+            # must be in format '"port,port"'
+            ports = keyvalue.split /,\s*/
+            args[:ports] = ports.map do |portstr| portstr.to_i end
+          else
+            raise InvalidCookieError.new "Unknown cookie parameter '#{key}'"
+          end
+        end
+      end until md.post_match.empty?
+      # if our last match in the scan failed
+      if args[:version] != 1
+        raise InvalidCookieError.new "Set-Cookie2 declares a non RFC2965 version cookie"
+      end
+      
+      args
+    end    
   end
 end

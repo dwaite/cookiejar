@@ -58,6 +58,15 @@ describe Jar do
       cookie_headers = jar.get_cookie_header uri
       cookie_headers.should == "b=baz;a=bar"
     end
+    it "should handle a version 1 cookie" do
+      jar = Jar.new
+      uri = 'http://foo.com/a/b/c/d' 
+      jar.set_cookie uri, 'a=bar'
+      jar.set_cookie uri, 'b=baz;path=/a/b/c/d'
+      jar.set_cookie2 uri, 'c=baz;Version=1;path="/"'
+      cookie_headers = jar.get_cookie_header uri
+      cookie_headers.should == '$Version=0;b=baz;$Path="/a/b/c/d";a=bar;$Path="/a/b/c/",$Version=1;c=baz;$Path="/"'
+    end
   end
   describe '.add_cookie' do
     it "should let me add a pre-existing cookie" do
@@ -102,6 +111,56 @@ describe Jar do
       jar.to_a.should have(5).items
       jar.expire_cookies true
       jar.to_a.should have(1).items
+    end
+  end
+  describe '#set_cookies_from_headers' do
+    it "should handle a Set-Cookie header" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie' => 'foo=bar' } 
+      cookies.should have(1).items
+      jar.to_a.should have(1).items
+    end
+    it "should handle multiple Set-Cookie headers" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie' => ['foo=bar','bar=baz'] } 
+      cookies.should have(2).items
+      jar.to_a.should have(2).items
+    end
+    it "should handle a Set-Cookie2 header" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie2' => 'foo=bar;Version=1' } 
+      cookies.should have(1).items
+      jar.to_a.should have(1).items
+    end
+    it "should handle multiple Set-Cookie2 headers" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie2' => ['foo=bar;Version=1','bar=baz;Version=1'] } 
+      cookies.should have(2).items
+      jar.to_a.should have(2).items
+    end
+    it "should handle mixed distinct Set-Cookie and Set-Cookie2 headers" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie' => 'foo=bar',
+        'Set-Cookie2' => 'bar=baz;Version=1' } 
+      cookies.should have(2).items
+      jar.to_a.should have(2).items
+    end
+    it "should handle overlapping Set-Cookie and Set-Cookie2 headers" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie' => ['foo=bar','bar=baz'],
+        'Set-Cookie2' => 'foo=bar;Version=1' } 
+      cookies.should have(2).items
+      jar.to_a.should have(2).items
+      # and has the version 1 cookie
+      cookies.find do |cookie|
+        cookie.name == 'foo'
+      end.version.should == 1
     end
   end
   begin

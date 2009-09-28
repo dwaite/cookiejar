@@ -60,6 +60,54 @@ module CookieJar
     	cookie = Cookie.from_set_cookie request_uri, cookie_header_value
     	add_cookie cookie
     end
+
+    # Given a request URI and a literal Set-Cookie2 header value, attempt to
+    # add the cookie to the cookie store.
+    # 
+    # @param [String, URI] request_uri the resource returning the header
+    # @param [String] cookie_header_value the contents of the Set-Cookie2
+    # @return [Cookie] which was created and stored
+    # @raise [InvalidCookieError] if the cookie header did not validate
+    def set_cookie2 request_uri, cookie_header_value
+    	cookie = Cookie.from_set_cookie2 request_uri, cookie_header_value
+    	add_cookie cookie
+    end
+    
+    # Given a request URI and some HTTP headers, attempt to add the cookie(s)
+    # (from Set-Cookie or Set-Cookie2 headers) to the cookie store. If a
+    # cookie is defined (by equivalent name, domain, and path) via Set-Cookie 
+    # and Set-Cookie2, the Set-Cookie version is ignored.
+    #
+    # @param [String, URI] request_uri the resource returning the header
+    # @param [Hash<String,[String,Array<String>]>] http_headers a Hash 
+    #   which may have a key of "Set-Cookie" or "Set-Cookie2", and values of
+    #   either strings or arrays of strings
+    # @return [Array<Cookie>,nil] the cookies created, or nil if none found.
+    # @raise [InvalidCookieError] if one of the cookie headers contained
+    #   invalid formatting or data
+    def set_cookies_from_headers request_uri, http_headers
+      cookies = gather_header_values http_headers['Set-Cookie'] do |value|
+        Cookie.from_set_cookie request_uri, value
+      end
+      
+      cookies += gather_header_values(http_headers['Set-Cookie2']) do |value|
+        Cookie.from_set_cookie2 request_uri, value
+      end
+      
+      # build the list of cookies, using a Jar. Since Set-Cookie2 values
+      # come second, they will replace the Set-Cookie versions.
+      jar = Jar.new
+      cookies.each do |cookie|
+        jar.add_cookie cookie
+      end
+      cookies = jar.to_a
+      
+      # now add them all to our own store.
+      cookies.each do |cookie|
+        add_cookie cookie
+      end
+      cookies
+    end
     
     # Add a pre-existing cookie object to the jar.
     #
@@ -135,7 +183,7 @@ module CookieJar
       @domains.delete_if do |domain, paths|
         paths.delete_if do |path, cookies|
           cookies.delete_if do |cookie_name, cookie|
-            cookie.is_expired? || (session && cookie.is_session?)
+            cookie.expired? || (session && cookie.session?)
           end
           cookies.empty?
         end
@@ -187,13 +235,51 @@ module CookieJar
     #   HTTP request
     def get_cookie_header request_uri, opts = { }
     	cookies = get_cookies request_uri, opts
-    	cookies.map do |cookie|
-    	  cookie.to_s
-  	  end.join ";"
+    	version = 0
+    	ver = [[],[]]
+    	cookies.each do |cookie|
+    	  ver[cookie.version] << cookie
+	    end
+	    if (ver[1].empty?)
+	      # can do a netscape-style cookie header, relish the opportunity
+    	  cookies.map do |cookie|
+    	    cookie.to_s
+  	    end.join ";"
+	    else
+	      # build a RFC 2965-style cookie header. Split the cookies into
+	      # version 0 and 1 groups so that we can reuse the '$Version' header
+	      result = ''
+	      unless ver[0].empty?
+	        result << '$Version=0;'
+  	      result << ver[0].map do |cookie|
+  	        (cookie.to_s 1,false)
+	        end.join(';')
+	        # separate version 0 and 1 with a comma
+	        result << ','
+        end
+        result << '$Version=1;'
+	      ver[1].map do |cookie|
+	        result << (cookie.to_s 1,false)
+        end
+	      result
+      end
     end
 
   protected  
 
+    def gather_header_values http_header_value, &block
+      result = []
+      http_header_value
+      if http_header_value.is_a? Array
+        http_header_value.each do |value| 
+          result << block.call(value)
+        end
+      elsif http_header_value.is_a? String
+        result << block.call(http_header_value)
+      end
+      result
+    end
+  
     def to_uri request_uri
       (request_uri.is_a? URI)? request_uri : (URI.parse request_uri)
     end
