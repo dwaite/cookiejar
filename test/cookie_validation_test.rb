@@ -125,6 +125,10 @@ describe CookieValidation do
       CookieValidation.compute_search_domains('http://foo.com/').should ==
       ['foo.com', '.foo.com']
     end
+    it "should handle hexadecimal TLDs" do
+      CookieValidation.compute_search_domains('http://tiny.cc/').should ==
+      ['tiny.cc', '.tiny.cc']
+    end
     it "should handle IP addresses" do
       CookieValidation.compute_search_domains('http://127.0.0.1/').should ==
       ['127.0.0.1']

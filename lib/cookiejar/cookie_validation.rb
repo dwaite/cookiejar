@@ -39,7 +39,7 @@ module CookieJar
     end
     BASE_HOSTNAME = /#{PATTERN::BASE_HOSTNAME}/
     BASE_PATH = /\A((?:[^\/?#]*\/)*)/
-    IPADDR = /\A#{PATTERN::IPADDR}\Z/
+    IPADDR = /\A#{PATTERN::IPV4ADDR}\Z|\A#{PATTERN::IPV6ADDR}\Z/
     HDN = /\A#{PATTERN::HOSTNAME}\Z/
     TOKEN = /\A#{PATTERN::TOKEN}\Z/
     PARAM1 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE1})?\Z/
