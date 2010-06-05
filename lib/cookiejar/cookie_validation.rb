@@ -355,11 +355,11 @@ module CookieJar
       first = true
       index = 0
       begin
-        md = PARAM2.match set_cookie_value, index
-        if md.nil? || md.offset(0).first != index
+        md = PARAM2.match set_cookie_value[index..-1]
+        if md.nil? || md.offset(0).first != 0
           raise InvalidCookieError.new "Invalid Set-Cookie2 header '#{set_cookie_value}'"
         end
-        index=md.offset(0)[1]
+        index+=md.offset(0)[1]
         
         key = md[1].downcase.to_sym
         keyvalue = md[2] || md[3]
