@@ -121,6 +121,13 @@ describe Jar do
       cookies.should have(1).items
       jar.to_a.should have(1).items
     end
+    it "should handle a set-cookie header" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'set-cookie' => 'foo=bar' } 
+      cookies.should have(1).items
+      jar.to_a.should have(1).items
+    end
     it "should handle multiple Set-Cookie headers" do
       jar = Jar.new
       cookies = jar.set_cookies_from_headers 'http://localhost/', 
@@ -132,6 +139,13 @@ describe Jar do
       jar = Jar.new
       cookies = jar.set_cookies_from_headers 'http://localhost/', 
       { 'Set-Cookie2' => 'foo=bar;Version=1' } 
+      cookies.should have(1).items
+      jar.to_a.should have(1).items
+    end
+    it "should handle a set-cookie2 header" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'set-cookie2' => 'foo=bar;Version=1' } 
       cookies.should have(1).items
       jar.to_a.should have(1).items
     end

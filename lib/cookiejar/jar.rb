@@ -86,11 +86,13 @@ module CookieJar
     # @raise [InvalidCookieError] if one of the cookie headers contained
     #   invalid formatting or data
     def set_cookies_from_headers request_uri, http_headers
-      cookies = gather_header_values http_headers['Set-Cookie'] do |value|
+      set_cookie_key = http_headers.keys.detect { |k| /\ASet-Cookie\Z/i.match k }
+      cookies = gather_header_values http_headers[set_cookie_key] do |value|
         Cookie.from_set_cookie request_uri, value
       end
       
-      cookies += gather_header_values(http_headers['Set-Cookie2']) do |value|
+      set_cookie2_key = http_headers.keys.detect { |k| /\ASet-Cookie2\Z/i.match k }
+      cookies += gather_header_values(http_headers[set_cookie2_key]) do |value|
         Cookie.from_set_cookie2 request_uri, value
       end
       
