@@ -88,12 +88,18 @@ module CookieJar
     def set_cookies_from_headers request_uri, http_headers
       set_cookie_key = http_headers.keys.detect { |k| /\ASet-Cookie\Z/i.match k }
       cookies = gather_header_values http_headers[set_cookie_key] do |value|
-        Cookie.from_set_cookie request_uri, value
+        begin
+          Cookie.from_set_cookie request_uri, value
+        rescue InvalidCookieError
+        end
       end
       
       set_cookie2_key = http_headers.keys.detect { |k| /\ASet-Cookie2\Z/i.match k }
       cookies += gather_header_values(http_headers[set_cookie2_key]) do |value|
-        Cookie.from_set_cookie2 request_uri, value
+        begin
+          Cookie.from_set_cookie2 request_uri, value
+        rescue InvalidCookieError
+        end
       end
       
       # build the list of cookies, using a Jar. Since Set-Cookie2 values
@@ -279,7 +285,7 @@ module CookieJar
       elsif http_header_value.is_a? String
         result << block.call(http_header_value)
       end
-      result
+      result.compact
     end
   
     def to_uri request_uri

@@ -176,6 +176,13 @@ describe Jar do
         cookie.name == 'foo'
       end.version.should == 1
     end
+    it "should silently drop invalid cookies" do
+      jar = Jar.new
+      cookies = jar.set_cookies_from_headers 'http://localhost/', 
+      { 'Set-Cookie' => ['foo=bar','bar=baz;domain=.foo.com'] } 
+      cookies.should have(1).items
+      jar.to_a.should have(1).items
+    end
   end
   begin
     require 'json'
