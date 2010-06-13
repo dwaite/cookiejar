@@ -1,4 +1,6 @@
 require 'rubygems'
+require 'bundler'
+Bundler.setup(:default,:build,:test)
 
 require 'rake'
 require 'rake/clean'
@@ -32,7 +34,7 @@ task :test => :spec
 
 spec = Gem::Specification.new do |s|
   s.name = 'cookiejar'
-  s.version = '0.2.9'
+  s.version = '0.2.9.pre'
   s.summary = "Client-side HTTP Cookie library"
   s.description = 
     %{Allows for parsing and returning cookies in Ruby HTTP client code}
