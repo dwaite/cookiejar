@@ -34,7 +34,7 @@ task :test => :spec
 
 spec = Gem::Specification.new do |s|
   s.name = 'cookiejar'
-  s.version = '0.2.9.pre'
+  s.version = '0.3.0'
   s.summary = "Client-side HTTP Cookie library"
   s.description = 
     %{Allows for parsing and returning cookies in Ruby HTTP client code}
