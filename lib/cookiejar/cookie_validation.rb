@@ -308,7 +308,12 @@ module CookieJar
         else
           case key
           when :expires
-            args[:expires_at] = Time.parse keyvalue
+            begin
+              args[:expires_at] = Time.parse keyvalue 
+            rescue ArgumentError
+              raise unless $!.message == "time out of range"
+              args[:expires_at] = Time.at(0x7FFFFFFF)
+            end 
           when *[:domain, :path]
             args[key] = keyvalue
           when :secure

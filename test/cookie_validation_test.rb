@@ -236,4 +236,9 @@ describe CookieValidation do
       end
     end
   end
+  describe '#parse_set_cookie' do
+    it "should max out at 2038 on 32bit systems" do
+      CookieValidation.parse_set_cookie("TRACK_USER_P=98237480810003948000782774;expires=Sat, 30-Jun-2040 05:39:49 GMT;path=/")[:expires_at].to_i.should >= 0x7FFFFFFF
+    end
+  end  
 end
