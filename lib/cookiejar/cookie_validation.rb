@@ -275,7 +275,7 @@ module CookieJar
         end
       end
 
-      raise (InvalidCookieError.new errors) unless errors.empty?
+      raise InvalidCookieError.new(errors) unless errors.empty?
 
       # Note: 'secure' is not explicitly defined as an SSL channel, and no
       # test is defined around validity and the 'secure' attribute
@@ -291,7 +291,7 @@ module CookieJar
     # @return [Hash] Contains the parsed values of the cookie
     def self.parse_set_cookie set_cookie_value
       args = { }
-      params=set_cookie_value.split /;\s*/
+      params=set_cookie_value.split(/;\s*/)
       
       first=true
       params.each do |param|
@@ -387,7 +387,7 @@ module CookieJar
             args[:version] = keyvalue.to_i
           when :port
             # must be in format '"port,port"'
-            ports = keyvalue.split /,\s*/
+            ports = keyvalue.split(/,\s*/)
             args[:ports] = ports.map do |portstr| portstr.to_i end
           else
             raise InvalidCookieError.new "Unknown cookie parameter '#{key}'"
