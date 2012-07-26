@@ -17,6 +17,10 @@ describe Jar do
       jar.set_cookie 'http://auth.foo.com/', 'foo=bar'
       jar.set_cookie 'http://auth.foo.com/', 'auth=135121...;domain=foo.com'    
     end
+    it "should allow me to set multiple cookies in 1 header" do
+      jar = Jar.new
+      jar.set_cookie 'http://foo.com/', 'my_cookie=123456; Domain=foo.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/, other_cookie=helloworld; Domain=foo.com; expires=Thu, 31 Dec 2037 23:59:59 GMT, last_cookie=098765'
+    end
   end
   describe '.get_cookies' do
     it "should let me read back cookies which are set" do
@@ -26,6 +30,11 @@ describe Jar do
       jar.set_cookie 'http://auth.foo.com/', 'foo=bar'
       jar.set_cookie 'http://auth.foo.com/', 'auth=135121...;domain=foo.com'
       jar.get_cookies('http://foo.com/').should have(3).items
+    end
+    it "should let me read back a multiple cookies from 1 header" do
+      jar = Jar.new
+      jar.set_cookie 'http://foo.com/', 'my_cookie=123456; Domain=foo.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/, other_cookie=helloworld; Domain=foo.com; expires=Thu, 31 Dec 2037 23:59:59 GMT, last_cookie=098765'
+      jar.get_cookie_header('http://foo.com/').should == 'last_cookie=098765;my_cookie=123456;other_cookie=helloworld'
     end
     it "should return cookies longest path first" do
       jar = Jar.new
