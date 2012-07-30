@@ -50,15 +50,17 @@ module CookieJar
     end
     
     # Given a request URI and a literal Set-Cookie header value, attempt to
-    # add the cookie to the cookie store.
+    # add the cookie(s) to the cookie store.
     # 
     # @param [String, URI] request_uri the resource returning the header
     # @param [String] cookie_header_value the contents of the Set-Cookie
     # @return [Cookie] which was created and stored
     # @raise [InvalidCookieError] if the cookie header did not validate
-    def set_cookie request_uri, cookie_header_value
-      cookie = Cookie.from_set_cookie request_uri, cookie_header_value
-      add_cookie cookie
+    def set_cookie request_uri, cookie_header_values
+      cookie_header_values.split(/, (?=[\w]+=)/).each do |cookie_header_value|
+        cookie = Cookie.from_set_cookie request_uri, cookie_header_value
+        add_cookie cookie
+      end
     end
 
     # Given a request URI and a literal Set-Cookie2 header value, attempt to
@@ -72,7 +74,7 @@ module CookieJar
       cookie = Cookie.from_set_cookie2 request_uri, cookie_header_value
       add_cookie cookie
     end
-    
+
     # Given a request URI and some HTTP headers, attempt to add the cookie(s)
     # (from Set-Cookie or Set-Cookie2 headers) to the cookie store. If a
     # cookie is defined (by equivalent name, domain, and path) via Set-Cookie 
