@@ -5,7 +5,7 @@ module CookieJar
   class InvalidCookieError < StandardError
     # [Array<String>] the specific validation issues encountered
     attr_reader :messages
-    
+
     # Create a new instance
     # @param [String, Array<String>] the validation issue(s) encountered
     def initialize message
@@ -18,7 +18,7 @@ module CookieJar
      super message
     end
   end
-  
+
   # Contains logic to parse and validate cookie headers
   module CookieValidation
     module PATTERN
@@ -45,7 +45,7 @@ module CookieJar
     PARAM1 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE1})?\Z/
     PARAM2 = Regexp.new "(#{PATTERN::TOKEN})(?:=(#{PATTERN::VALUE2}))?(?:\\Z|;)", '', 'n'
     # TWO_DOT_DOMAINS = /\A\.(com|edu|net|mil|gov|int|org)\Z/
-    
+
     # Converts the input object to a URI (if not already a URI)
     #
     # @param [String, URI] request_uri URI we are normalizing
@@ -53,7 +53,7 @@ module CookieJar
     def self.to_uri request_uri
       (request_uri.is_a? URI)? request_uri : (URI.parse request_uri)
     end
-    
+
     # Converts an input cookie or uri to a string representing the path.
     # Assume strings are already paths
     #
@@ -66,10 +66,10 @@ module CookieJar
         uri_or_path
       end
     end
-    
+
     # Converts an input cookie or uri to a string representing the domain.
     # Assume strings are already domains. Value may not be an effective host.
-    # 
+    #
     # @param [String, URI, Cookie] object containing the domain
     # @return [String] domain information.
     def self.to_domain uri_or_domain
@@ -81,7 +81,7 @@ module CookieJar
         uri_or_domain
       end
     end
-    
+
     # Compare a tested domain against the base domain to see if they match, or
     # if the base domain is reachable.
     #
@@ -91,11 +91,11 @@ module CookieJar
     def self.domains_match tested_domain, base_domain
       base = effective_host base_domain
       search_domains = compute_search_domains_for_host base
-      result = search_domains.find do |domain| 
-        domain == tested_domain  
+      result = search_domains.find do |domain|
+        domain == tested_domain
       end
     end
-    
+
     # Compute the reach of a hostname (RFC 2965, section 1)
     # Determines the next highest superdomain
     #
@@ -109,7 +109,7 @@ module CookieJar
         match[1]
       end
     end
-        
+
     # Compute the base of a path, for default cookie path assignment
     #
     # @param [String, URI, Cookie] path, or object holding path
@@ -117,7 +117,7 @@ module CookieJar
     def self.cookie_base_path path
       BASE_PATH.match(to_path path)[1]
     end
-    
+
     # Processes cookie path data using the following rules:
     # Paths are separated by '/' characters, and accepted values are truncated
     # to the last '/' character. If no path is specified in the cookie, a path
@@ -131,17 +131,17 @@ module CookieJar
     def self.determine_cookie_path request_uri, cookie_path
       uri = to_uri request_uri
       cookie_path = to_path cookie_path
-      
+
       if cookie_path == nil || cookie_path.empty?
         cookie_path = cookie_base_path uri.path
       end
       cookie_path
     end
-    
+
     # Given a URI, compute the relevant search domains for pre-existing
     # cookies. This includes all the valid dotted forms for a named or IP
     # domains.
-    # 
+    #
     # @param [String, URI] request_uri requested uri
     # @return [Array<String>] all cookie domain values which would match the
     #   requested uri
@@ -150,7 +150,7 @@ module CookieJar
       host = uri.host
       compute_search_domains_for_host host
     end
-    
+
     # Given a host, compute the relevant search domains for pre-existing
     # cookies
     #
@@ -169,7 +169,7 @@ module CookieJar
       end
       result
     end
-    
+
     # Processes cookie domain data using the following rules:
     # Domains strings of the form .foo.com match 'foo.com' and all immediate
     # subdomains of 'foo.com'. Domain strings specified of the form 'foo.com' are
@@ -189,7 +189,7 @@ module CookieJar
     def self.determine_cookie_domain request_uri, cookie_domain
       uri = to_uri request_uri
       domain = to_domain cookie_domain
-    
+
       if domain == nil || domain.empty?
         domain = effective_host uri.host
       else
@@ -197,11 +197,11 @@ module CookieJar
         if domain =~ IPADDR || domain.start_with?('.')
           domain
         else
-          ".#{domain}" 
+          ".#{domain}"
         end
       end
     end
-    
+
     # Compute the effective host (RFC 2965, section 1)
     #
     # Has the added additional logic of searching for interior dots specifically, and
@@ -212,15 +212,15 @@ module CookieJar
     def self.effective_host host_or_uri
       hostname = to_domain host_or_uri
       hostname = hostname.downcase
-    
+
       if /.[\.:]./.match(hostname) || hostname == '.local'
         hostname
       else
         hostname + '.local'
       end
     end
-    
-    # Check whether a cookie meets all of the rules to be created, based on 
+
+    # Check whether a cookie meets all of the rules to be created, based on
     # its internal settings and the URI it came from.
     #
     # @param [String,URI] request_uri originally requested URI
@@ -234,12 +234,12 @@ module CookieJar
       request_secure = (uri.scheme == 'https')
       cookie_host = cookie.domain
       cookie_path = cookie.path
-      
+
       errors = []
-    
+
       # From RFC 2965, Section 3.3.2 Rejecting Cookies
-    
-      # A user agent rejects (SHALL NOT store its information) if the 
+
+      # A user agent rejects (SHALL NOT store its information) if the
       # Version attribute is missing. Note that the legacy Set-Cookie
       # directive will result in an implicit version 0.
       unless cookie.version
@@ -247,7 +247,7 @@ module CookieJar
       end
 
       # The value for the Path attribute is not a prefix of the request-URI
-      unless request_path.start_with? cookie_path 
+      unless request_path.start_with? cookie_path
         errors << "Path is not a prefix of the request uri path"
       end
 
@@ -256,7 +256,7 @@ module CookieJar
         cookie_host == '.local' #is the domain cookie for local addresses
         errors << "Domain format is illegal"
       end
-    
+
       # The effective host name that derives from the request-host does
       # not domain-match the Domain attribute.
       #
@@ -266,7 +266,7 @@ module CookieJar
       unless domains_match cookie_host, uri
         errors << "Domain is inappropriate based on request URI hostname"
       end
-    
+
       # The Port attribute has a "port-list", and the request-port was
       # not in the list.
       unless cookie.ports.nil? || cookie.ports.length != 0
@@ -281,18 +281,18 @@ module CookieJar
       # test is defined around validity and the 'secure' attribute
       true
     end
-    
+
     # Break apart a traditional (non RFC 2965) cookie value into its core
     # components. This does not do any validation, or defaulting of values
     # based on requested URI
-    # 
+    #
     # @param [String] set_cookie_value a Set-Cookie header formatted cookie
     #   definition
     # @return [Hash] Contains the parsed values of the cookie
     def self.parse_set_cookie set_cookie_value
       args = { }
       params=set_cookie_value.split(/;\s*/)
-      
+
       first=true
       params.each do |param|
         result = PARAM1.match param
@@ -309,11 +309,11 @@ module CookieJar
           case key
           when :expires
             begin
-              args[:expires_at] = Time.parse keyvalue 
+              args[:expires_at] = Time.parse keyvalue
             rescue ArgumentError
               raise unless $!.message == "time out of range"
               args[:expires_at] = Time.at(0x7FFFFFFF)
-            end 
+            end
           when *[:domain, :path]
             args[key] = keyvalue
           when :secure
@@ -328,7 +328,7 @@ module CookieJar
       args[:version] = 0
       args
     end
-    
+
     # Parse a RFC 2965 value and convert to a literal string
     def self.value_to_string value
       if /\A"(.*)"\Z/.match value
@@ -338,7 +338,7 @@ module CookieJar
         value
       end
     end
-    
+
     # Attempt to decipher a partially decoded version of text cookie values
     def self.decode_value value
       if /\A"(.*)"\Z/.match value
@@ -347,11 +347,11 @@ module CookieJar
         CGI.unescape value
       end
     end
-      
-    # Break apart a RFC 2965 cookie value into its core components. 
+
+    # Break apart a RFC 2965 cookie value into its core components.
     # This does not do any validation, or defaulting of values
     # based on requested URI
-    # 
+    #
     # @param [String] set_cookie_value a Set-Cookie2 header formatted cookie
     #   definition
     # @return [Hash] Contains the parsed values of the cookie
@@ -365,7 +365,7 @@ module CookieJar
           raise InvalidCookieError.new "Invalid Set-Cookie2 header '#{set_cookie_value}'"
         end
         index+=md.offset(0)[1]
-        
+
         key = md[1].downcase.to_sym
         keyvalue = md[2] || md[3]
         if first
@@ -398,8 +398,8 @@ module CookieJar
       if args[:version] != 1
         raise InvalidCookieError.new "Set-Cookie2 declares a non RFC2965 version cookie"
       end
-      
+
       args
-    end    
+    end
   end
 end
