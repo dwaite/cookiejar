@@ -163,7 +163,7 @@ describe Cookie do
       end
       it "should automatically deserialize to a cookie" do
         json = "{\"json_class\":\"CookieJar::Cookie\",\"name\":\"foo\",\"value\":\"bar\",\"domain\":\"localhost.local\",\"path\":\"\\/\",\"created_at\":\"2009-09-11 12:51:03 -0600\",\"expiry\":\"2009-09-11 19:10:00 -0600\",\"secure\":true}" 
-        c = JSON.parse json
+        c = JSON.parse json, :create_additions => true
         c.should be_a Cookie
         CookieValidation.validate_cookie 'https://localhost/', c
       end
