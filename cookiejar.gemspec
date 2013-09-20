@@ -9,7 +9,19 @@ Gem::Specification.new do |s|
   s.date = %q{2010-06-12}
   s.description = %q{Allows for parsing and returning cookies in Ruby HTTP client code}
   s.email = %q{david@alkaline-solutions.com}
-  s.files = ["lib/cookiejar/cookie.rb", "lib/cookiejar/cookie_validation.rb", "lib/cookiejar/jar.rb", "lib/cookiejar.rb", "test/cookie_test.rb", "test/cookie_validation_test.rb", "test/jar_test.rb"]
+  s.files = [
+    "LICENSE",
+    "README.markdown",
+    "Rakefile",
+    "contributors.yaml",
+    "lib/cookiejar/cookie.rb",
+    "lib/cookiejar/cookie_validation.rb",
+    "lib/cookiejar/jar.rb",
+    "lib/cookiejar.rb",
+    "test/cookie_test.rb",
+    "test/cookie_validation_test.rb",
+    "test/jar_test.rb"
+  ]
   s.homepage = %q{http://alkaline-solutions.com}
   s.rdoc_options = ["--title", "CookieJar -- Client-side HTTP Cookies"]
   s.require_paths = ["lib"]
