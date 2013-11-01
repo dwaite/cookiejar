@@ -77,7 +77,7 @@ module CookieJar
 
     # Given a request URI and some HTTP headers, attempt to add the cookie(s)
     # (from Set-Cookie or Set-Cookie2 headers) to the cookie store. If a
-    # cookie is defined (by equivalent name, domain, and path) via Set-Cookie 
+    # cookie is defined (by equivalent name, domain, and path) via Set-Cookie
     # and Set-Cookie2, the Set-Cookie version is ignored.
     #
     # @param [String, URI] request_uri the resource returning the header
@@ -164,7 +164,7 @@ module CookieJar
       if o.is_a? Hash
         o = o['cookies']
       end
-      cookies = o.inject [] do |result, cookie_json|
+      cookies = JSON.parse(o).inject [] do |result, cookie_json|
         result << (Cookie.json_create cookie_json)
       end
       self.from_a cookies
