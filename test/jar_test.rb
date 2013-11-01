@@ -223,7 +223,7 @@ describe Jar do
       
       it "should automatically deserialize to a jar" do
         json = "{\"json_class\":\"CookieJar::Jar\",\"cookies\":[{\"name\":\"foo\",\"value\":\"bar\",\"domain\":\"localhost.local\",\"path\":\"\\/\",\"created_at\":\"2009-09-11 12:51:03 -0600\",\"expiry\":\"2028-11-01 12:00:00 GMT\",\"secure\":true}]}" 
-        jar = JSON.parse json
+        jar = JSON.parse json, :create_additions => true
         jar.get_cookies('https://localhost/').should have(1).items  
       end
     end
