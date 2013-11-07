@@ -209,7 +209,7 @@ describe Jar do
       it "should deserialize a JSON array to a jar" do
         json = "[{\"name\":\"foo\",\"value\":\"bar\",\"domain\":\"localhost.local\",\"path\":\"\\/\",\"created_at\":\"2009-09-11 12:51:03 -0600\",\"expiry\":\"2028-11-01 12:00:00 GMT\",\"secure\":true}]" 
         array = JSON.parse json
-        
+       
         jar = Jar.json_create array
         jar.get_cookies('https://localhost/').should have(1).items
       end

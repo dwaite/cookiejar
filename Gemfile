@@ -1,10 +1,4 @@
 source "http://rubygems.org"
+ruby "2.0.0"
 
-group :build do
-  gem "yard"
-end
-
-group :test do
-  gem "json"
-  gem "rspec", "~>1.3.2"
-end
+gemspec

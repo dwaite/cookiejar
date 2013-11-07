@@ -161,10 +161,13 @@ module CookieJar
     # @param o [Hash] the expanded JSON object
     # @return [CookieJar] a new CookieJar instance
     def self.json_create o
+      if o.is_a? String
+        o = JSON.parse(o)
+      end
       if o.is_a? Hash
         o = o['cookies']
       end
-      cookies = JSON.parse(o).inject [] do |result, cookie_json|
+      cookies = o.inject([]) do |result, cookie_json|
         result << (Cookie.json_create cookie_json)
       end
       self.from_a cookies
