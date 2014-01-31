@@ -1,6 +1,6 @@
 require 'cookiejar'
 require 'yaml'
-require 'rubygems'
+require 'json'
 
 include CookieJar
 

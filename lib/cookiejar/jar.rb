@@ -164,7 +164,7 @@ module CookieJar
       if o.is_a? Hash
         o = o['cookies']
       end
-      cookies = JSON.parse(o).inject [] do |result, cookie_json|
+      cookies = JSON.parse(JSON.dump(o)).inject [] do |result, cookie_json|
         result << (Cookie.json_create cookie_json)
       end
       self.from_a cookies
