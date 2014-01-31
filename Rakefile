@@ -14,11 +14,11 @@ YARD::Rake::YardocTask.new do |t|
 end
 
 begin
-  require 'spec/rake/spectask'
+  require 'rspec/core/rake_task'
 
-  Spec::Rake::SpecTask.new do |t|
-    t.libs << 'lib'
-    t.spec_files = FileList['test/**/*_test.rb']
+  RSpec::Core::RakeTask.new do |t|
+    t.ruby_opts = %w[-w]
+    t.pattern = 'spec/**/*_spec.rb'
   end
 rescue LoadError
   puts "Warning: unable to load rspec tasks"
