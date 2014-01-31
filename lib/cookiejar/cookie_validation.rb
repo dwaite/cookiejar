@@ -91,7 +91,7 @@ module CookieJar
     def self.domains_match tested_domain, base_domain
       base = effective_host base_domain
       search_domains = compute_search_domains_for_host base
-      result = search_domains.find do |domain|
+      search_domains.find do |domain|
         domain == tested_domain
       end
     end
@@ -229,9 +229,7 @@ module CookieJar
     # @raise [InvalidCookieError] on failures, containing all validation errors
     def self.validate_cookie request_uri, cookie
       uri = to_uri request_uri
-      request_host = effective_host uri.host
       request_path = uri.path
-      request_secure = (uri.scheme == 'https')
       cookie_host = cookie.domain
       cookie_path = cookie.path
 

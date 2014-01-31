@@ -15,43 +15,43 @@ describe CookieValidation do
     it "should fail if the path is more specific" do
       lambda do
         subdirred = Cookie.from_set_cookie localaddr, 'foo=bar;path=/foo/bar/baz'
-        # validate_cookie localaddr, subdirred
+        validate_cookie localaddr, subdirred
       end.should raise_error InvalidCookieError
     end
     it "should fail if the path is different than the request" do
       lambda do
         difdirred = Cookie.from_set_cookie localaddr, 'foo=bar;path=/baz/'
-        # validate_cookie localaddr, difdirred
+        validate_cookie localaddr, difdirred
       end.should raise_error InvalidCookieError
     end
     it "should fail if the domain has no dots" do
       lambda do
         nodot = Cookie.from_set_cookie 'http://zero/', 'foo=bar;domain=zero'
-        # validate_cookie 'http://zero/', nodot
+        validate_cookie 'http://zero/', nodot
       end.should raise_error InvalidCookieError
     end
     it "should fail for explicit localhost" do
       lambda do
         localhost = Cookie.from_set_cookie localaddr, 'foo=bar;domain=localhost'
-        # validate_cookie localaddr, localhost
+        validate_cookie localaddr, localhost
       end.should raise_error InvalidCookieError
     end
     it "should fail for mismatched domains" do
       lambda do
         foobar = Cookie.from_set_cookie 'http://www.foo.com/', 'foo=bar;domain=bar.com'
-        # validate_cookie 'http://www.foo.com/', foobar
+        validate_cookie 'http://www.foo.com/', foobar
       end.should raise_error InvalidCookieError
     end
     it "should fail for domains more than one level up" do
       lambda do
         xyz = Cookie.from_set_cookie 'http://x.y.z.com/', 'foo=bar;domain=z.com'
-        # validate_cookie 'http://x.y.z.com/', xyz
+        validate_cookie 'http://x.y.z.com/', xyz
       end.should raise_error InvalidCookieError
     end
     it "should fail for setting subdomain cookies" do
       lambda do
         subdomain = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar;domain=auth.foo.com'
-        # validate_cookie 'http://foo.com/', subdomain
+        validate_cookie 'http://foo.com/', subdomain
       end.should raise_error InvalidCookieError
     end
     it "should handle a normal implicit internet cookie" do

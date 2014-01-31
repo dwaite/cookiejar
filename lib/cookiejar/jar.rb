@@ -245,7 +245,6 @@ module CookieJar
     #   HTTP request
     def get_cookie_header request_uri, opts = { }
       cookies = get_cookies request_uri, opts
-      version = 0
       ver = [[],[]]
       cookies.each do |cookie|
         ver[cookie.version] << cookie

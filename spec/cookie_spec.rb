@@ -22,7 +22,7 @@ describe Cookie do
     it "should handle cookies from the netscape spec" do
       NETSCAPE_SPEC_SET_COOKIE_HEADERS.each do |value|
         header, url = *value
-        cookie = Cookie.from_set_cookie url, header
+        Cookie.from_set_cookie url, header
       end
     end
     it "should give back the input names and values" do
@@ -81,7 +81,7 @@ describe Cookie do
       cookie.value.should == 'mine'
     end
     it "should accept quoted parameter values" do
-      cookie = Cookie.from_set_cookie2 'http://localhost/', 'foo=bar;Version="1"'
+      Cookie.from_set_cookie2 'http://localhost/', 'foo=bar;Version="1"'
     end
     it "should honor the discard and max-age parameters" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'f=b;max-age=100;discard;Version=1'
