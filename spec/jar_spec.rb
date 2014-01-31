@@ -34,7 +34,7 @@ describe Jar do
     it "should let me read back a multiple cookies from 1 header" do
       jar = Jar.new
       jar.set_cookie 'http://foo.com/', 'my_cookie=123456; Domain=foo.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/, other_cookie=helloworld; Domain=foo.com; expires=Thu, 31 Dec 2037 23:59:59 GMT, last_cookie=098765'
-      jar.get_cookie_header('http://foo.com/').should == 'last_cookie=098765;my_cookie=123456;other_cookie=helloworld'
+      jar.get_cookie_header('http://foo.com/').should eq 'last_cookie=098765;my_cookie=123456;other_cookie=helloworld'
     end
     it "should return cookies longest path first" do
       jar = Jar.new
@@ -45,10 +45,10 @@ describe Jar do
       jar.set_cookie uri, 'd=bar;path=/a/'
       cookies = jar.get_cookies(uri)
       cookies.should have(4).items
-      cookies[0].name.should == 'b'
-      cookies[1].name.should == 'a'
-      cookies[2].name.should == 'c'
-      cookies[3].name.should == 'd'
+      cookies[0].name.should eq 'b'
+      cookies[1].name.should eq 'a'
+      cookies[2].name.should eq 'c'
+      cookies[3].name.should eq 'd'
     end
     it "should not return expired cookies" do
       jar = Jar.new
@@ -65,7 +65,7 @@ describe Jar do
       jar.set_cookie uri, 'a=bar'
       jar.set_cookie uri, 'b=baz;path=/a/b/c/d'
       cookie_headers = jar.get_cookie_header uri
-      cookie_headers.should == "b=baz;a=bar"
+      cookie_headers.should eq "b=baz;a=bar"
     end
     it "should handle a version 1 cookie" do
       jar = Jar.new
@@ -74,7 +74,7 @@ describe Jar do
       jar.set_cookie uri, 'b=baz;path=/a/b/c/d'
       jar.set_cookie2 uri, 'c=baz;Version=1;path="/"'
       cookie_headers = jar.get_cookie_header uri
-      cookie_headers.should == '$Version=0;b=baz;$Path="/a/b/c/d";a=bar;$Path="/a/b/c/",$Version=1;c=baz;$Path="/"'
+      cookie_headers.should eq '$Version=0;b=baz;$Path="/a/b/c/d";a=bar;$Path="/a/b/c/",$Version=1;c=baz;$Path="/"'
     end
   end
   describe '.add_cookie' do
@@ -183,7 +183,7 @@ describe Jar do
       # and has the version 1 cookie
       cookies.find do |cookie|
         cookie.name == 'foo'
-      end.version.should == 1
+      end.version.should eq 1
     end
     it "should silently drop invalid cookies" do
       jar = Jar.new

@@ -27,41 +27,41 @@ describe Cookie do
     end
     it "should give back the input names and values" do
       cookie = Cookie.from_set_cookie 'http://localhost/', 'foo=bar'
-      cookie.name.should == 'foo'
-      cookie.value.should == 'bar'
+      cookie.name.should eq 'foo'
+      cookie.value.should eq 'bar'
     end
     it "should normalize domain names" do
       cookie = Cookie.from_set_cookie 'http://localhost/', 'foo=Bar;domain=LoCaLHoSt.local'
-      cookie.domain.should == '.localhost.local'
+      cookie.domain.should eq '.localhost.local'
     end
     it "should accept non-normalized .local" do
       cookie = Cookie.from_set_cookie 'http://localhost/', 'foo=bar;domain=.local'
-      cookie.domain.should == '.local'
+      cookie.domain.should eq '.local'
     end
     it "should accept secure cookies" do
       cookie = Cookie.from_set_cookie 'https://www.google.com/a/blah', 'GALX=RgmSftjnbPM;Path=/a/;Secure'
-      cookie.name.should == 'GALX'
+      cookie.name.should eq 'GALX'
       cookie.secure.should be_true
     end
   end
   describe "#from_set_cookie2" do
     it "should give back the input names and values" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'foo=bar;Version=1'
-      cookie.name.should == 'foo'
-      cookie.value.should == 'bar'
+      cookie.name.should eq 'foo'
+      cookie.value.should eq 'bar'
     end
     it "should normalize domain names" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'foo=Bar;domain=LoCaLHoSt.local;Version=1'
-      cookie.domain.should == '.localhost.local'
+      cookie.domain.should eq '.localhost.local'
     end
     it "should accept non-normalized .local" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'foo=bar;domain=.local;Version=1'
-      cookie.domain.should == '.local'
+      cookie.domain.should eq '.local'
     end
     it "should accept secure cookies" do
       cookie = Cookie.from_set_cookie2 'https://www.google.com/a/blah', 'GALX=RgmSftjnbPM;Path="/a/";Secure;Version=1'
-      cookie.name.should == 'GALX'
-      cookie.path.should == '/a/'
+      cookie.name.should eq 'GALX'
+      cookie.path.should eq '/a/'
       cookie.secure.should be_true
     end
     it "should fail on unquoted paths" do
@@ -72,13 +72,13 @@ describe Cookie do
     end
     it "should accept quoted values" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'foo="bar";Version=1'
-      cookie.name.should == 'foo'
-      cookie.value.should == '"bar"'
+      cookie.name.should eq 'foo'
+      cookie.value.should eq '"bar"'
     end
     it "should accept poorly chosen names" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'Version=mine;Version=1'
-      cookie.name.should == 'Version'
-      cookie.value.should == 'mine'
+      cookie.name.should eq 'Version'
+      cookie.value.should eq 'mine'
     end
     it "should accept quoted parameter values" do
       Cookie.from_set_cookie2 'http://localhost/', 'foo=bar;Version="1"'
@@ -117,25 +117,25 @@ describe Cookie do
   describe '#to_s' do
     it "should handle a simple cookie" do
       cookie = Cookie.from_set_cookie 'http://localhost/', 'f=b'
-      cookie.to_s.should == 'f=b'
-      cookie.to_s(1).should == '$Version=0;f=b;$Path="/"'
+      cookie.to_s.should eq 'f=b'
+      cookie.to_s(1).should eq '$Version=0;f=b;$Path="/"'
     end
     it "should report an explicit domain" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'f=b;Version=1;Domain=.local'
-      cookie.to_s(1).should == '$Version=1;f=b;$Path="/";$Domain=.local'
+      cookie.to_s(1).should eq '$Version=1;f=b;$Path="/";$Domain=.local'
     end
     it "should return specified ports" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'f=b;Version=1;Port="80,443"'
-      cookie.to_s(1).should == '$Version=1;f=b;$Path="/";$Port="80,443"'
+      cookie.to_s(1).should eq '$Version=1;f=b;$Path="/";$Port="80,443"'
     end
     it "should handle specified paths" do
       cookie = Cookie.from_set_cookie 'http://localhost/bar/', 'f=b;path=/bar/'
-      cookie.to_s.should == 'f=b'
-      cookie.to_s(1).should == '$Version=0;f=b;$Path="/bar/"'
+      cookie.to_s.should eq 'f=b'
+      cookie.to_s(1).should eq '$Version=0;f=b;$Path="/bar/"'
     end
     it "should omit $Version header when asked" do
       cookie = Cookie.from_set_cookie 'http://localhost/', 'f=b'
-      cookie.to_s(1,false).should == 'f=b;$Path="/"'
+      cookie.to_s(1,false).should eq 'f=b;$Path="/"'
     end
   end
   describe '#should_send?' do
