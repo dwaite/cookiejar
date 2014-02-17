@@ -1,4 +1,4 @@
 source "http://rubygems.org"
-ruby "2.0.0"
+# requires ruby >= 2.0
 
 gemspec
