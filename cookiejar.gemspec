@@ -40,6 +40,6 @@ Gem::Specification.new do |s|
   end
   s.add_development_dependency "rake",  "~> 10.0"
   s.add_development_dependency "rspec-collection_matchers", "~> 1.0"
-  s.add_development_dependency "rspec", "~> 2.99"
+  s.add_development_dependency "rspec", "~> 3.0"
   s.add_development_dependency "yard",  "~> 0.8", ">= 0.8.7"
 end
