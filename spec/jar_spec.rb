@@ -1,6 +1,4 @@
-require 'cookiejar'
-require 'yaml'
-require 'rubygems'
+require 'spec_helper'
 
 include CookieJar
 

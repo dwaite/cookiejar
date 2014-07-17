@@ -1,5 +1,4 @@
-require 'cookiejar'
-require 'rubygems'
+require 'spec_helper'
 
 include CookieJar
 describe CookieValidation do
@@ -56,23 +55,23 @@ describe CookieValidation do
     end
     it "should handle a normal implicit internet cookie" do
       normal = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar'
-      CookieValidation.validate_cookie('http://foo.com/', normal).should be_true
+      CookieValidation.validate_cookie('http://foo.com/', normal).should be_truthy
     end
     it "should handle a normal implicit localhost cookie" do
       localhost = Cookie.from_set_cookie 'http://localhost/', 'foo=bar'
-      CookieValidation.validate_cookie('http://localhost/', localhost).should be_true
+      CookieValidation.validate_cookie('http://localhost/', localhost).should be_truthy
     end
     it "should handle an implicit IP address cookie" do
       ipaddr =  Cookie.from_set_cookie 'http://127.0.0.1/', 'foo=bar'
-      CookieValidation.validate_cookie('http://127.0.0.1/', ipaddr).should be_true
+      CookieValidation.validate_cookie('http://127.0.0.1/', ipaddr).should be_truthy
     end
     it "should handle an explicit domain on an internet site" do
       explicit = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar;domain=.foo.com'
-      CookieValidation.validate_cookie('http://foo.com/', explicit).should be_true
+      CookieValidation.validate_cookie('http://foo.com/', explicit).should be_truthy
     end
     it "should handle setting a cookie explicitly on a superdomain" do
       superdomain = Cookie.from_set_cookie 'http://auth.foo.com/', 'foo=bar;domain=.foo.com'
-      CookieValidation.validate_cookie('http://foo.com/', superdomain).should be_true
+      CookieValidation.validate_cookie('http://foo.com/', superdomain).should be_truthy
     end
     it "should handle explicitly setting a cookie" do
       explicit = Cookie.from_set_cookie 'http://foo.com/bar/', 'foo=bar;path=/bar/'

@@ -1,5 +1,4 @@
-require 'cookiejar'
-require 'rubygems'
+require 'spec_helper'
 
 include CookieJar
 
@@ -41,7 +40,7 @@ describe Cookie do
     it "should accept secure cookies" do
       cookie = Cookie.from_set_cookie 'https://www.google.com/a/blah', 'GALX=RgmSftjnbPM;Path=/a/;Secure'
       cookie.name.should == 'GALX'
-      cookie.secure.should be_true
+      cookie.secure.should be_truthy
     end
   end
   describe "#from_set_cookie2" do
@@ -62,7 +61,7 @@ describe Cookie do
       cookie = Cookie.from_set_cookie2 'https://www.google.com/a/blah', 'GALX=RgmSftjnbPM;Path="/a/";Secure;Version=1'
       cookie.name.should == 'GALX'
       cookie.path.should == '/a/'
-      cookie.secure.should be_true
+      cookie.secure.should be_truthy
     end
     it "should fail on unquoted paths" do
       lambda do 
@@ -141,8 +140,8 @@ describe Cookie do
   describe '#should_send?' do
     it "should not send if ports do not match" do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'f=b;Version=1;Port="80"'
-      cookie.should_send?("http://localhost/", false).should be_true
-      cookie.should_send?("https://localhost/", false).should be_false
+      cookie.should_send?("http://localhost/", false).should be_truthy
+      cookie.should_send?("https://localhost/", false).should be_falsey
     end
   end
   begin
