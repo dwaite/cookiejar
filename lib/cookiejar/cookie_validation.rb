@@ -247,6 +247,11 @@ module CookieJar
       end
 
       # The value for the Path attribute is not a prefix of the request-URI
+
+      # If the initial request path is empty then this will always fail
+      # so check if it is empty and if so then set it to /
+      request_path = "/" if request_path == ""
+
       unless request_path.start_with? cookie_path
         errors << "Path is not a prefix of the request uri path"
       end

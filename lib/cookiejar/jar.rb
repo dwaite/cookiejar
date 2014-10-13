@@ -94,6 +94,10 @@ module CookieJar
         begin
           Cookie.from_set_cookie request_uri, value
         rescue InvalidCookieError
+            # This shouldn't just ignore errors, need some mechanism to report
+            # them back to the user
+            #puts "Invalid Cookie"
+            #puts e.inspect
         end
       end
 
