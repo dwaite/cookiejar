@@ -147,6 +147,9 @@ module CookieJar
     #   requested uri
     def self.compute_search_domains request_uri
       uri = to_uri request_uri
+	  if not uri.is_a? URI::HTTP
+	  	return nil
+      end
       host = uri.host
       compute_search_domains_for_host host
     end
