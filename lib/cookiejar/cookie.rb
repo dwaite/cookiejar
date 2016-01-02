@@ -69,7 +69,7 @@ module CookieJar
     # @param [Time] time to compare against, or 'now' if omitted
     # @return [Boolean]
     def expired? (time = Time.now)
-      expires_at != nil && time > expires_at
+      !expires_at.nil? && time > expires_at
     end
 
     # Indicates whether the cookie will be considered invalid after the end
