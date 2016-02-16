@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'cgi'
 require 'uri'
 
@@ -266,7 +267,7 @@ module CookieJar
         end
       end
 
-      raise InvalidCookieError, errors unless errors.empty?
+      fail InvalidCookieError, errors unless errors.empty?
 
       # Note: 'secure' is not explicitly defined as an SSL channel, and no
       # test is defined around validity and the 'secure' attribute
@@ -288,8 +289,8 @@ module CookieJar
       params.each do |param|
         result = PARAM1.match param
         unless result
-          raise InvalidCookieError,
-                "Invalid cookie parameter in cookie '#{set_cookie_value}'"
+          fail InvalidCookieError,
+               "Invalid cookie parameter in cookie '#{set_cookie_value}'"
         end
         key = result[1].downcase.to_sym
         keyvalue = result[2]
@@ -313,7 +314,7 @@ module CookieJar
           when :httponly
             args[:http_only] = true
           else
-            raise InvalidCookieError, "Unknown cookie parameter '#{key}'"
+            fail InvalidCookieError, "Unknown cookie parameter '#{key}'"
           end
         end
       end
@@ -354,8 +355,8 @@ module CookieJar
       begin
         md = PARAM2.match set_cookie_value[index..-1]
         if md.nil? || md.offset(0).first != 0
-          raise InvalidCookieError,
-                "Invalid Set-Cookie2 header '#{set_cookie_value}'"
+          fail InvalidCookieError,
+               "Invalid Set-Cookie2 header '#{set_cookie_value}'"
         end
         index += md.offset(0)[1]
 
@@ -383,14 +384,14 @@ module CookieJar
             ports = keyvalue.split(/,\s*/)
             args[:ports] = ports.map(&:to_i)
           else
-            raise InvalidCookieError, "Unknown cookie parameter '#{key}'"
+            fail InvalidCookieError, "Unknown cookie parameter '#{key}'"
           end
         end
       end until md.post_match.empty?
       # if our last match in the scan failed
       if args[:version] != 1
-        raise InvalidCookieError,
-              'Set-Cookie2 declares a non RFC2965 version cookie'
+        fail InvalidCookieError,
+             'Set-Cookie2 declares a non RFC2965 version cookie'
       end
 
       args
