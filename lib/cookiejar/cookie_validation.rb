@@ -147,6 +147,7 @@ module CookieJar
     #   requested uri
     def self.compute_search_domains(request_uri)
       uri = to_uri request_uri
+      return nil unless uri.is_a? URI::HTTP
       host = uri.host
       compute_search_domains_for_host host
     end
@@ -242,7 +243,7 @@ module CookieJar
 
       # If the initial request path is empty then this will always fail
       # so check if it is empty and if so then set it to /
-      request_path = "/" if request_path == ""
+      request_path = '/' if request_path == ''
 
       unless request_path.start_with? cookie_path
         errors << 'Path is not a prefix of the request uri path'
@@ -312,6 +313,8 @@ module CookieJar
               raise unless $ERROR_INFO.message == 'time out of range'
               args[:expires_at] = Time.at(0x7FFFFFFF)
             end
+          when :"max-age"
+            args[:max_age] = keyvalue.to_i
           when :domain, :path
             args[key] = keyvalue
           when :secure

@@ -176,7 +176,12 @@ module CookieJar
       # cookie path must start with the uri, it must not be a secure cookie
       # being sent over http, and it must not be a http_only cookie sent to
       # a script
-      path_match   = uri.path.start_with? @path
+      path = if uri.path == ''
+               '/'
+             else
+               uri.path
+      end
+      path_match   = path.start_with? @path
       secure_match = !(@secure && uri.scheme == 'http')
       script_match = !(script && @http_only)
       expiry_match = !expired?

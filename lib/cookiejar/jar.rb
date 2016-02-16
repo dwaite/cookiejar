@@ -205,7 +205,9 @@ module CookieJar
     # otherwise unordered.
     #
     # @param [String, URI] request_uri the address the HTTP request will be
-    #   sent to
+    #   sent to. This must be a full URI, i.e. must include the protocol,
+    #   if you pass digi.ninja it will fail to find the domain, you must pass
+    #   http://digi.ninja
     # @param [Hash] opts options controlling returned cookies
     # @option opts [Boolean] :script (false) Cookies marked HTTP-only will be
     #   ignored if true
@@ -214,11 +216,19 @@ module CookieJar
       uri = to_uri request_uri
       hosts = Cookie.compute_search_domains uri
 
+      return [] if hosts.nil?
+
+      path = if uri.path == ''
+               '/'
+             else
+               uri.path
+      end
+
       results = []
       hosts.each do |host|
         domain = find_domain host
-        domain.each do |path, cookies|
-          next unless uri.path.start_with? path
+        domain.each do |apath, cookies|
+          next unless path.start_with? apath
           results += cookies.values.select do |cookie|
             cookie.should_send? uri, opts[:script]
           end
