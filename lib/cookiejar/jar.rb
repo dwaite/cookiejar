@@ -1,4 +1,5 @@
 require 'cookiejar/cookie'
+require "json"
 
 module CookieJar
   # A cookie store for client side usage.
