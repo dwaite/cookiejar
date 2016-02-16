@@ -3,14 +3,12 @@ require 'uri'
 require 'cookiejar/cookie_validation'
 
 module CookieJar
-
   # Cookie is an immutable object which defines the data model of a HTTP Cookie.
   # The data values within the cookie may be different from the
   # values described in the literal cookie declaration.
   # Specifically, the 'domain' and 'path' values may be set to defaults
   # based on the requested resource that resulted in the cookie being set.
   class Cookie
-
     # [String] The name of the cookie.
     attr_reader :name
     # [String] The value of the cookie, without any attempts at decoding.
@@ -68,15 +66,15 @@ module CookieJar
     #
     # @param [Time] time to compare against, or 'now' if omitted
     # @return [Boolean]
-    def expired? (time = Time.now)
-      expires_at != nil && time > expires_at
+    def expired?(time = Time.now)
+      !expires_at.nil? && time > expires_at
     end
 
     # Indicates whether the cookie will be considered invalid after the end
     # of the current user session
     # @return [Boolean]
     def session?
-      @expiry == nil || @discard
+      @expiry.nil? || @discard
     end
 
     # Create a cookie based on an absolute URI and the string value of a
@@ -88,12 +86,12 @@ module CookieJar
     # @param set_cookie_value [String] HTTP value for the Set-Cookie header.
     # @return [Cookie] created from the header string and request URI
     # @raise [InvalidCookieError] on validation failure(s)
-    def self.from_set_cookie request_uri, set_cookie_value
+    def self.from_set_cookie(request_uri, set_cookie_value)
       args = CookieJar::CookieValidation.parse_set_cookie set_cookie_value
-      args[:domain] = CookieJar::CookieValidation.
-                        determine_cookie_domain request_uri, args[:domain]
-      args[:path] = CookieJar::CookieValidation.
-                        determine_cookie_path request_uri, args[:path]
+      args[:domain] = CookieJar::CookieValidation
+                      .determine_cookie_domain request_uri, args[:domain]
+      args[:path] = CookieJar::CookieValidation
+                    .determine_cookie_path request_uri, args[:path]
       cookie = Cookie.new args
       CookieJar::CookieValidation.validate_cookie request_uri, cookie
       cookie
@@ -108,12 +106,12 @@ module CookieJar
     # @param set_cookie_value [String] HTTP value for the Set-Cookie2 header.
     # @return [Cookie] created from the header string and request URI
     # @raise [InvalidCookieError] on validation failure(s)
-    def self.from_set_cookie2 request_uri, set_cookie_value
+    def self.from_set_cookie2(request_uri, set_cookie_value)
       args = CookieJar::CookieValidation.parse_set_cookie2 set_cookie_value
-      args[:domain] = CookieJar::CookieValidation.
-                        determine_cookie_domain request_uri, args[:domain]
-      args[:path] = CookieJar::CookieValidation.
-                        determine_cookie_path request_uri, args[:path]
+      args[:domain] = CookieJar::CookieValidation
+                      .determine_cookie_domain request_uri, args[:domain]
+      args[:path] = CookieJar::CookieValidation
+                    .determine_cookie_path request_uri, args[:path]
       cookie = Cookie.new args
       CookieJar::CookieValidation.validate_cookie request_uri, cookie
       cookie
@@ -125,45 +123,37 @@ module CookieJar
     #   RFC2965-style.
     # @param [Boolean] true prefix, for RFC2965, whether to prefix with
     # "$Version=<version>;". Ignored for Netscape-style cookies
-    def to_s ver=0, prefix=true
-      case ver
-      when 0
-        "#{name}=#{value}"
-      when 1
-        # we do not need to encode path; the only characters required to be
-        # quoted must be escaped in URI
-        str = prefix ? "$Version=#{version};" : ""
-        str << "#{name}=#{value};$Path=\"#{path}\""
-        if domain.start_with? '.'
-          str << ";$Domain=#{domain}"
-        end
-        if ports
-          str << ";$Port=\"#{ports.join ','}\""
-        end
-        str
-      end
-    end
+    def to_s(ver = 0, prefix = true)
+      return "#{name}=#{value}" if ver == 0
 
+      # we do not need to encode path; the only characters required to be
+      # quoted must be escaped in URI
+      str = prefix ? "$Version=#{version};" : ''
+      str << "#{name}=#{value};$Path=\"#{path}\""
+      str << ";$Domain=#{domain}" if domain.start_with? '.'
+      str << ";$Port=\"#{ports.join ','}\"" if ports
+      str
+    end
 
     # Return a hash representation of the cookie.
 
     def to_hash
       result = {
-        :name => @name,
-        :value => @value,
-        :domain => @domain,
-        :path => @path,
-        :created_at => @created_at
+        name: @name,
+        value: @value,
+        domain: @domain,
+        path: @path,
+        created_at: @created_at
       }
       {
-        :expiry => @expiry,
-        :secure => (true if @secure),
-        :http_only => (true if @http_only),
-        :version => (@version if version != 0),
-        :comment => @comment,
-        :comment_url => @comment_url,
-        :discard => (true if @discard),
-        :ports => @ports
+        expiry: @expiry,
+        secure: (true if @secure),
+        http_only: (true if @http_only),
+        version: (@version if version != 0),
+        comment: @comment,
+        comment_url: @comment_url,
+        discard: (true if @discard),
+        ports: @ports
       }.each do |name, value|
         result[name] = value if value
       end
@@ -181,7 +171,7 @@ module CookieJar
     # @param script [Boolean] indicates that cookies with the 'httponly'
     # extension should be ignored
     # @return [Boolean] whether this cookie should be sent to the server
-    def should_send? request_uri, script
+    def should_send?(request_uri, script)
       uri = CookieJar::CookieValidation.to_uri request_uri
       # cookie path must start with the uri, it must not be a secure cookie
       # being sent over http, and it must not be a http_only cookie sent to
@@ -195,7 +185,7 @@ module CookieJar
     end
 
     def decoded_value
-      CookieJar::CookieValidation::decode_value value
+      CookieJar::CookieValidation.decode_value value
     end
 
     # Return a JSON 'object' for the various data values. Allows for
@@ -204,8 +194,8 @@ module CookieJar
     # @param [Array] a options controlling output JSON text
     #   (usually a State and a depth)
     # @return [String] JSON representation of object data
-    def to_json *a
-      to_hash.merge(:json_class => self.class.name).to_json(*a)
+    def to_json(*a)
+      to_hash.merge(json_class: self.class.name).to_json(*a)
     end
 
     # Given a Hash representation of a JSON document, create a local cookie
@@ -213,7 +203,7 @@ module CookieJar
     #
     # @param [Hash] o JSON object of array data
     # @return [Cookie] cookie formed from JSON data
-    def self.json_create o
+    def self.json_create(o)
       params = o.inject({}) do |hash, (key, value)|
         hash[key.to_sym] = value
         hash
@@ -227,7 +217,7 @@ module CookieJar
       end
       params.delete :expiry
 
-      self.new params
+      new params
     end
 
     # Compute the cookie search domains for a given request URI
@@ -236,28 +226,27 @@ module CookieJar
     #
     # @param request_uri [String, URI] address being requested
     # @return [Array<String>] String domain matches
-    def self.compute_search_domains request_uri
+    def self.compute_search_domains(request_uri)
       CookieValidation.compute_search_domains request_uri
     end
-  protected
-    # Call {from_set_cookie} to create a new Cookie instance
-    def initialize args
 
+    protected
+
+    # Call {from_set_cookie} to create a new Cookie instance
+    def initialize(args)
       @created_at, @name, @value, @domain, @path, @secure,
       @http_only, @version, @comment, @comment_url, @discard, @ports \
       = args.values_at \
-      :created_at, :name, :value, :domain, :path, :secure,
-      :http_only, :version, :comment, :comment_url, :discard, :ports
+        :created_at, :name, :value, :domain, :path, :secure,
+        :http_only, :version, :comment, :comment_url, :discard, :ports
 
       @created_at ||= Time.now
-      @expiry     = args[:max_age]   || args[:expires_at]
+      @expiry = args[:max_age] || args[:expires_at]
       @secure     ||= false
       @http_only  ||= false
       @discard    ||= false
 
-      if @ports.is_a? Integer
-        @ports = [@ports]
-      end
+      @ports = [@ports] if @ports.is_a? Integer
     end
   end
 end

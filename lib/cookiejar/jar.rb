@@ -56,7 +56,7 @@ module CookieJar
     # @param [String] cookie_header_value the contents of the Set-Cookie
     # @return [Cookie] which was created and stored
     # @raise [InvalidCookieError] if the cookie header did not validate
-    def set_cookie request_uri, cookie_header_values
+    def set_cookie(request_uri, cookie_header_values)
       cookie_header_values.split(/, (?=[\w]+=)/).each do |cookie_header_value|
         cookie = Cookie.from_set_cookie request_uri, cookie_header_value
         add_cookie cookie
@@ -70,7 +70,7 @@ module CookieJar
     # @param [String] cookie_header_value the contents of the Set-Cookie2
     # @return [Cookie] which was created and stored
     # @raise [InvalidCookieError] if the cookie header did not validate
-    def set_cookie2 request_uri, cookie_header_value
+    def set_cookie2(request_uri, cookie_header_value)
       cookie = Cookie.from_set_cookie2 request_uri, cookie_header_value
       add_cookie cookie
     end
@@ -87,7 +87,7 @@ module CookieJar
     # @return [Array<Cookie>,nil] the cookies created, or nil if none found.
     # @raise [InvalidCookieError] if one of the cookie headers contained
     #   invalid formatting or data
-    def set_cookies_from_headers request_uri, http_headers
+    def set_cookies_from_headers(request_uri, http_headers)
       set_cookie_key = http_headers.keys.detect { |k| /\ASet-Cookie\Z/i.match k }
       cookies = gather_header_values http_headers[set_cookie_key] do |value|
         begin
@@ -123,7 +123,7 @@ module CookieJar
     #
     # @param [Cookie] cookie a pre-existing cookie object
     # @return [Cookie] the cookie added to the store
-    def add_cookie cookie
+    def add_cookie(cookie)
       domain_paths = find_or_add_domain_for_cookie cookie
       add_cookie_to_path domain_paths, cookie
       cookie
@@ -149,7 +149,7 @@ module CookieJar
     # @param [Array] a options controlling output JSON text
     #   (usually a State and a depth)
     # @return [String] JSON representation of object data
-    def to_json *a
+    def to_json(*a)
       {
         'json_class' => self.class.name,
         'cookies' => to_a.to_json(*a)
@@ -160,17 +160,13 @@ module CookieJar
     #
     # @param o [Hash] the expanded JSON object
     # @return [CookieJar] a new CookieJar instance
-    def self.json_create o
-      if o.is_a? String
-        o = JSON.parse(o)
-      end
-      if o.is_a? Hash
-        o = o['cookies']
-      end
+    def self.json_create(o)
+      o = JSON.parse(o) if o.is_a? String
+      o = o['cookies'] if o.is_a? Hash
       cookies = o.inject([]) do |result, cookie_json|
         result << (Cookie.json_create cookie_json)
       end
-      self.from_a cookies
+      from_a cookies
     end
 
     # Create a new Jar from an array of Cookie objects. Expired cookies
@@ -179,7 +175,7 @@ module CookieJar
     #
     # @param [Array<Cookie>] cookies array of cookie objects
     # @return [CookieJar] a new CookieJar instance
-    def self.from_a cookies
+    def self.from_a(cookies)
       jar = new
       cookies.each do |cookie|
         jar.add_cookie cookie
@@ -192,10 +188,10 @@ module CookieJar
     #
     # @param session [Boolean] whether session cookies should be expired,
     #   or just cookies past their expiration date.
-    def expire_cookies session = false
-      @domains.delete_if do |domain, paths|
-        paths.delete_if do |path, cookies|
-          cookies.delete_if do |cookie_name, cookie|
+    def expire_cookies(session = false)
+      @domains.delete_if do |_domain, paths|
+        paths.delete_if do |_path, cookies|
+          cookies.delete_if do |_cookie_name, cookie|
             cookie.expired? || (session && cookie.session?)
           end
           cookies.empty?
@@ -211,10 +207,10 @@ module CookieJar
     # @param [String, URI] request_uri the address the HTTP request will be
     #   sent to
     # @param [Hash] opts options controlling returned cookies
-    # @option opts [Boolean] :script (false) Cookies marked HTTP-only will be ignored
-    #   if true
+    # @option opts [Boolean] :script (false) Cookies marked HTTP-only will be
+    #   ignored if true
     # @return [Array<Cookie>] cookies which should be sent in the HTTP request
-    def get_cookies request_uri, opts = { }
+    def get_cookies(request_uri, opts = {})
       uri = to_uri request_uri
       hosts = Cookie.compute_search_domains uri
 
@@ -222,14 +218,13 @@ module CookieJar
       hosts.each do |host|
         domain = find_domain host
         domain.each do |path, cookies|
-          if uri.path.start_with? path
-            results += cookies.values.select do |cookie|
-              cookie.should_send? uri, opts[:script]
-            end
+          next unless uri.path.start_with? path
+          results += cookies.values.select do |cookie|
+            cookie.should_send? uri, opts[:script]
           end
         end
       end
-      #Sort by path length, longest first
+      # Sort by path length, longest first
       results.sort do |lhs, rhs|
         rhs.path.length <=> lhs.path.length
       end
@@ -242,22 +237,19 @@ module CookieJar
     # @param [String, URI] request_uri the address the HTTP request will be
     #   sent to
     # @param [Hash] opts options controlling returned cookies
-    # @option opts [Boolean] :script (false) Cookies marked HTTP-only will be ignored
-    #   if true
+    # @option opts [Boolean] :script (false) Cookies marked HTTP-only will be
+    #   ignored if true
     # @return String value of the Cookie header which should be sent on the
     #   HTTP request
-    def get_cookie_header request_uri, opts = { }
+    def get_cookie_header(request_uri, opts = {})
       cookies = get_cookies request_uri, opts
-      version = 0
-      ver = [[],[]]
+      ver = [[], []]
       cookies.each do |cookie|
         ver[cookie.version] << cookie
       end
-      if (ver[1].empty?)
+      if ver[1].empty?
         # can do a netscape-style cookie header, relish the opportunity
-        cookies.map do |cookie|
-          cookie.to_s
-        end.join ";"
+        cookies.map(&:to_s).join ';'
       else
         # build a RFC 2965-style cookie header. Split the cookies into
         # version 0 and 1 groups so that we can reuse the '$Version' header
@@ -265,46 +257,46 @@ module CookieJar
         unless ver[0].empty?
           result << '$Version=0;'
           result << ver[0].map do |cookie|
-            (cookie.to_s 1,false)
+            (cookie.to_s 1, false)
           end.join(';')
           # separate version 0 and 1 with a comma
           result << ','
         end
         result << '$Version=1;'
         ver[1].map do |cookie|
-          result << (cookie.to_s 1,false)
+          result << (cookie.to_s 1, false)
         end
         result
       end
     end
 
-  protected
+    protected
 
-    def gather_header_values http_header_value, &block
+    def gather_header_values(http_header_value, &_block)
       result = []
       if http_header_value.is_a? Array
         http_header_value.each do |value|
-          result << block.call(value)
+          result << yield(value)
         end
       elsif http_header_value.is_a? String
-        result << block.call(http_header_value)
+        result << yield(http_header_value)
       end
       result.compact
     end
 
-    def to_uri request_uri
-      (request_uri.is_a? URI)? request_uri : (URI.parse request_uri)
+    def to_uri(request_uri)
+      (request_uri.is_a? URI) ? request_uri : (URI.parse request_uri)
     end
 
-    def find_domain host
+    def find_domain(host)
       @domains[host] || {}
     end
 
-    def find_or_add_domain_for_cookie cookie
+    def find_or_add_domain_for_cookie(cookie)
       @domains[cookie.domain] ||= {}
     end
 
-    def add_cookie_to_path paths, cookie
+    def add_cookie_to_path(paths, cookie)
       path_entry = (paths[cookie.path] ||= {})
       path_entry[cookie.name] = cookie
     end
