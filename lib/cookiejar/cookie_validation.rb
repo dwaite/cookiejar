@@ -147,6 +147,9 @@ module CookieJar
     #   requested uri
     def self.compute_search_domains(request_uri)
       uri = to_uri request_uri
+	  if not uri.is_a? URI::HTTP
+	  	return nil
+      end
       host = uri.host
       compute_search_domains_for_host host
     end
@@ -312,7 +315,9 @@ module CookieJar
               raise unless $ERROR_INFO.message == 'time out of range'
               args[:expires_at] = Time.at(0x7FFFFFFF)
             end
-          when :domain, :path
+          when :"max-age"
+            args[:max_age] = keyvalue.to_i
+          when *[:domain, :path]
             args[key] = keyvalue
           when :secure
             args[:secure] = true
