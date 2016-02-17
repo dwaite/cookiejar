@@ -5,6 +5,8 @@ Ruby CookieJar
 
   **Author**:	David Waite 
 
+[![Build Status](https://travis-ci.org/dwaite/cookiejar.svg?branch=master)](https://travis-ci.org/dwaite/cookiejar)
+
 Synopsis
 --------
 
