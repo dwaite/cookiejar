@@ -25,7 +25,6 @@ begin
 rescue LoadError
   puts 'Warning: unable to load rspec tasks'
 end
-task test: :spec
 
 # Default Rake task is to run all tests
 task default: :test
