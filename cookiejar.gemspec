@@ -23,4 +23,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec-collection_matchers', '~> 1.0'
   s.add_development_dependency 'rspec', '~> 3.0'
   s.add_development_dependency 'yard',  '~> 0.8', '>= 0.8.7'
+  s.add_development_dependency 'bundler', '>= 0.9.3'
 end

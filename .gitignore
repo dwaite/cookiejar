@@ -3,4 +3,5 @@
 pkg
 doc
 .bundle
+.ruby-version
 Gemfile.lock
