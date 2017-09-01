@@ -39,7 +39,7 @@ module CookieJar
   #
   # Paths are given a straight prefix string comparison to match.
   # Further filters <secure, http only, ports> are not represented in this
-  # heirarchy.
+  # hierarchy.
   #
   # Cookies returned are ordered solely by specificity (length) of the
   # path.
