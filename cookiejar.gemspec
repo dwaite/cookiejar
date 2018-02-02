@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.summary     = 'Client-side HTTP Cookie library'
   s.homepage    = 'http://alkaline-solutions.com'
   s.date        = '2014-02-01'
+  s.license     = 'BSD-2-Clause'
 
   s.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
   s.test_files    = s.files.grep(%r{^(spec)/})
