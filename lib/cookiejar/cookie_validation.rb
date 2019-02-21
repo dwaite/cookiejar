@@ -261,9 +261,9 @@ module CookieJar
       # The request-host is a HDN (not IP address) and has the form HD,
       # where D is the value of the Domain attribute, and H is a string
       # that contains one or more dots.
-      unless domains_match cookie_host, uri
-        errors << 'Domain is inappropriate based on request URI hostname'
-      end
+      #unless domains_match cookie_host, uri
+      #  errors << 'Domain is inappropriate based on request URI hostname'
+      #end
 
       # The Port attribute has a "port-list", and the request-port was
       # not in the list.
