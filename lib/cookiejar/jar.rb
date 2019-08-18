@@ -222,7 +222,7 @@ module CookieJar
                '/'
              else
                uri.path
-      end
+             end
 
       results = []
       hosts.each do |host|
