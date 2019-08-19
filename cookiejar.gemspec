@@ -19,9 +19,9 @@ Gem::Specification.new do |s|
   s.rdoc_options  = ['--title', 'CookieJar -- Client-side HTTP Cookies']
   s.require_paths = ['lib']
 
-  s.add_development_dependency 'rake', '~> 10.0'
+  s.add_development_dependency 'rake', '>= 10.0', '< 13'
   s.add_development_dependency 'rspec-collection_matchers', '~> 1.0'
   s.add_development_dependency 'rspec', '~> 3.0'
-  s.add_development_dependency 'yard',  '~> 0.8', '>= 0.8.7'
+  s.add_development_dependency 'yard',  '~> 0.9.20'
   s.add_development_dependency 'bundler', '>= 0.9.3'
 end
