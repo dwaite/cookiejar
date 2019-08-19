@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.name        = 'cookiejar'
   s.version     = CookieJar::VERSION
   s.authors     = ['David Waite']
+  s.license     = 'BSD-2-Clause'
   s.email       = ['david@alkaline-solutions.com']
   s.description = 'Allows for parsing and returning cookies in Ruby HTTP client code'
   s.summary     = 'Client-side HTTP Cookie library'
