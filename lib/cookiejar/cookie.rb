@@ -180,7 +180,7 @@ module CookieJar
                '/'
              else
                uri.path
-      end
+             end
       path_match   = path.start_with? @path
       secure_match = !(@secure && uri.scheme == 'http')
       script_match = !(script && @http_only)
