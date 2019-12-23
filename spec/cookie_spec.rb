@@ -43,6 +43,10 @@ describe Cookie do
       expect(cookie.name).to eq 'GALX'
       expect(cookie.secure).to be_truthy
     end
+    it 'should accept SameSite attribute' do
+      cookie = Cookie.from_set_cookie 'https://www.google.com/a/blah', 'GALX=RgmSftjnbPM;samesite=strict'
+      expect(cookie.same_site).to eq 'strict'
+    end
   end
   describe '#from_set_cookie2' do
     it 'should give back the input names and values' do

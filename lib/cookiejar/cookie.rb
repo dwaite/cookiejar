@@ -47,6 +47,9 @@ module CookieJar
     # indicates specific ports on the HTTP server which should receive this
     # cookie if contacted.
     attr_reader :ports
+    # [String] SameSite cookie attribute value - see
+    # https://tools.ietf.org/html/draft-west-first-party-cookies-07
+    attr_reader :same_site
     # [Time] Time when this cookie was first evaluated and created.
     attr_reader :created_at
 
@@ -240,10 +243,12 @@ module CookieJar
     # Call {from_set_cookie} to create a new Cookie instance
     def initialize(args)
       @created_at, @name, @value, @domain, @path, @secure,
-      @http_only, @version, @comment, @comment_url, @discard, @ports \
+      @http_only, @version, @comment, @comment_url, @discard, @ports, \
+      @same_site \
       = args.values_at \
         :created_at, :name, :value, :domain, :path, :secure,
-        :http_only, :version, :comment, :comment_url, :discard, :ports
+        :http_only, :version, :comment, :comment_url, :discard, :ports,
+        :same_site
 
       @created_at ||= Time.now
       @expiry = args[:max_age] || args[:expires_at]

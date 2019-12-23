@@ -74,6 +74,10 @@ describe CookieValidation do
       higher = Cookie.from_set_cookie 'http://foo.com/bar/baz/', 'foo=bar;path=/bar/'
       CookieValidation.validate_cookie('http://foo.com/bar/baz/', higher)
     end
+    it 'should accept SameSite attribute' do
+      cookie = Cookie.from_set_cookie 'http://127.0.0.1/', 'foo=bar;samesite=strict'
+      expect(CookieValidation.validate_cookie('http://127.0.0.1/', cookie)).to be_truthy
+    end
   end
   describe '#cookie_base_path' do
     it "should leave '/' alone" do
