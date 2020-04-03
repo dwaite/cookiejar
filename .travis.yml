@@ -1,5 +1,4 @@
 language: ruby
-sudo: false
 cache: bundler
 rvm:
  - 2.3.0
@@ -10,8 +9,14 @@ rvm:
  - 2.1.2
  - 2.0.0
  - jruby-19mode
- - rbx
+
 jdk:
- - oraclejdk8
+ - openjdk8
+
+matrix:
+  include:
+    - name: Rubinius
+      dist: trusty
+      rvm: rbx-4
 
 before_install: gem install bundler -v ">=1.9.3"
