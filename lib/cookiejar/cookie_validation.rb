@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'cgi'
 require 'uri'
+require 'public_suffix'
 
 module CookieJar
   # Represents a set of cookie validation errors
@@ -107,7 +108,7 @@ module CookieJar
       host = to_domain hostname
       host = host.downcase
       match = BASE_HOSTNAME.match host
-      match[1] if match
+      match[1] if match && (PublicSuffix.valid?(match[1]) || match[1] == 'local')
     end
 
     # Compute the base of a path, for default cookie path assignment
@@ -161,10 +162,11 @@ module CookieJar
     def self.compute_search_domains_for_host(host)
       host = effective_host host
       result = [host]
-      unless host =~ IPADDR
+      return result if host =~ IPADDR
+      loop do
         result << ".#{host}"
-        base = hostname_reach host
-        result << ".#{base}" if base
+        host = hostname_reach(host)
+        break unless host
       end
       result
     end
