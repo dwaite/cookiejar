@@ -321,6 +321,8 @@ module CookieJar
             args[:secure] = true
           when :httponly
             args[:http_only] = true
+          when :samesite
+            args[:samesite] = keyvalue.downcase
           else
             fail InvalidCookieError, "Unknown cookie parameter '#{key}'"
           end
