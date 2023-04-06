@@ -10,7 +10,7 @@ Ruby CookieJar
 Status
 ------
 
-This project is no longer maintained. There may be other gems more appropriate for use which support newer versions of the cookie specifications, or more maintained forks of this gem such as [https://github.com/dorianmariefr/cookiejar2](cookiejar2).
+This project is no longer maintained. There may be other gems more appropriate for use which support newer versions of the cookie specifications, or more maintained forks of this gem such as [cookiejar2](https://github.com/dorianmariefr/cookiejar2).
 
 Synopsis
 --------
