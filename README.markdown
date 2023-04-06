@@ -7,6 +7,11 @@ Ruby CookieJar
 
 [![Build Status](https://travis-ci.org/dwaite/cookiejar.svg?branch=master)](https://travis-ci.org/dwaite/cookiejar)
 
+Status
+------
+
+This project is no longer maintained. There may be other gems more appropriate for use which support newer versions of the cookie specifications, or more maintained forks of this gem such as [https://github.com/dorianmariefr/cookiejar2](cookiejar2).
+
 Synopsis
 --------
 
