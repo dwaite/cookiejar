@@ -36,11 +36,6 @@ describe CookieValidation do
         Cookie.from_set_cookie 'http://www.foo.com/', 'foo=bar;domain=bar.com'
       end).to raise_error InvalidCookieError
     end
-    it 'should fail for domains more than one level up' do
-      expect(lambda do
-        Cookie.from_set_cookie 'http://x.y.z.com/', 'foo=bar;domain=z.com'
-      end).to raise_error InvalidCookieError
-    end
     it 'should fail for setting subdomain cookies' do
       expect(lambda do
         Cookie.from_set_cookie 'http://foo.com/', 'foo=bar;domain=auth.foo.com'
@@ -111,7 +106,7 @@ describe CookieValidation do
   describe '#compute_search_domains' do
     it 'should handle subdomains' do
       expect(CookieValidation.compute_search_domains('http://www.auth.foo.com/')).to eq(
-        ['www.auth.foo.com', '.www.auth.foo.com', '.auth.foo.com'])
+        ['www.auth.foo.com', '.www.auth.foo.com', '.auth.foo.com', '.foo.com'])
     end
     it 'should handle root domains' do
       expect(CookieValidation.compute_search_domains('http://foo.com/')).to eq(
@@ -128,6 +123,10 @@ describe CookieValidation do
     it 'should handle local addresses' do
       expect(CookieValidation.compute_search_domains('http://zero/')).to eq(
         ['zero.local', '.zero.local', '.local'])
+    end
+    it 'should handle multi-part tlds' do
+      expect(CookieValidation.compute_search_domains('http://foo.co.nz/')).to eq(
+        ['foo.co.nz', '.foo.co.nz'])
     end
   end
   describe '#determine_cookie_domain' do
@@ -190,9 +189,10 @@ describe CookieValidation do
     it 'should handle matching a superdomain' do
       expect(CookieValidation.domains_match('.foo.com', 'auth.foo.com')).to eq '.foo.com'
       expect(CookieValidation.domains_match('.y.z.foo.com', 'x.y.z.foo.com')).to eq '.y.z.foo.com'
+      expect(CookieValidation.domains_match('.z.foo.com', 'x.y.z.foo.com')).to eq '.z.foo.com'
     end
-    it 'should not match superdomains, or illegal domains' do
-      expect(CookieValidation.domains_match('.z.foo.com', 'x.y.z.foo.com')).to be_nil
+    it 'should not match tlds, or illegal domains' do
+      expect(CookieValidation.domains_match('.com', 'x.y.z.foo.com')).to be_nil
       expect(CookieValidation.domains_match('foo.com', 'com')).to be_nil
     end
     it 'should not match domains with and without a dot suffix together' do
@@ -210,6 +210,9 @@ describe CookieValidation do
     end
     it 'should return nil for a root domain' do
       expect(CookieValidation.hostname_reach('github.com')).to be_nil
+    end
+    it 'should return nil for a two part tld' do
+      expect(CookieValidation.hostname_reach('co.nz')).to be_nil
     end
     it "should return 'local' for a local domain" do
       ['foo.local', 'foo.local.'].each do |hostname|
