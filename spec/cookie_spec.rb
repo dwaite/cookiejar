@@ -65,10 +65,10 @@ describe Cookie do
       expect(cookie.secure).to be_truthy
     end
     it 'should fail on unquoted paths' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie2 'https://www.google.com/a/blah',
                                 'GALX=RgmSftjnbPM;Path=/a/;Secure;Version=1'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should accept quoted values' do
       cookie = Cookie.from_set_cookie2 'http://localhost/', 'foo="bar";Version=1'

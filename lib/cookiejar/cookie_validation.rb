@@ -45,7 +45,7 @@ module CookieJar
     HDN = /\A#{PATTERN::HOSTNAME}\Z/
     TOKEN = /\A#{PATTERN::TOKEN}\Z/
     PARAM1 = /\A(#{PATTERN::TOKEN})(?:=#{PATTERN::VALUE1})?\Z/
-    PARAM2 = Regexp.new "(#{PATTERN::TOKEN})(?:=(#{PATTERN::VALUE2}))?(?:\\Z|;)", '', 'n'
+    PARAM2 = Regexp.new("(#{PATTERN::TOKEN})(?:=(#{PATTERN::VALUE2}))?(?:\\Z|;)", Regexp::NOENCODING)
     # TWO_DOT_DOMAINS = /\A\.(com|edu|net|mil|gov|int|org)\Z/
 
     # Converts the input object to a URI (if not already a URI)

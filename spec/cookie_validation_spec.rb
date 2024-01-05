@@ -5,46 +5,46 @@ describe CookieValidation do
   describe '#validate_cookie' do
     localaddr = 'http://localhost/foo/bar/'
     it 'should fail if version unset' do
-      expect(lambda do
+      expect {
         unversioned = Cookie.from_set_cookie localaddr, 'foo=bar'
         unversioned.instance_variable_set :@version, nil
         CookieValidation.validate_cookie localaddr, unversioned
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail if the path is more specific' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie localaddr, 'foo=bar;path=/foo/bar/baz'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail if the path is different than the request' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie localaddr, 'foo=bar;path=/baz/'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail if the domain has no dots' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie 'http://zero/', 'foo=bar;domain=zero'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail for explicit localhost' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie localaddr, 'foo=bar;domain=localhost'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail for mismatched domains' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie 'http://www.foo.com/', 'foo=bar;domain=bar.com'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail for domains more than one level up' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie 'http://x.y.z.com/', 'foo=bar;domain=z.com'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should fail for setting subdomain cookies' do
-      expect(lambda do
+      expect {
         Cookie.from_set_cookie 'http://foo.com/', 'foo=bar;domain=auth.foo.com'
-      end).to raise_error InvalidCookieError
+      }.to raise_error InvalidCookieError
     end
     it 'should handle a normal implicit internet cookie' do
       normal = Cookie.from_set_cookie 'http://foo.com/', 'foo=bar'
